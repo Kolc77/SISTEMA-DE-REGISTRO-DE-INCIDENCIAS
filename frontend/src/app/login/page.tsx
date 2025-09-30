@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+
+
 type LoginResponse = {
   ok: boolean;
   role?: "ADMIN" | "USER";
@@ -38,12 +40,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Redirige según rol (ajusta rutas a tu gusto)
-      if (data.role === "ADMIN") {
-        window.location.href = "/home";
-      } else {
-        window.location.href = "/dashboard";
-      }
+      // Redirige siempre a /home tras login exitoso
+      window.location.href = "/home";
     } catch {
       setErr("No se pudo conectar con el servidor.");
     } finally {

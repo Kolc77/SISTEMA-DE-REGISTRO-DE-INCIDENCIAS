@@ -1,6 +1,7 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Post, Res, Get, UseGuards, Req } from '@nestjs/common';
+import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 class LoginDto { email: string; password: string; }
 
@@ -20,5 +21,12 @@ export class AuthController {
       path: '/',
     });
     return { ok: true, role: user.rol, nombre: user.nombre };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  me(@Req() req: any) {
+    // req.user viene de JwtStrategy
+    return { ok: true, userId: req.user.userId, role: req.user.role };
   }
 }
