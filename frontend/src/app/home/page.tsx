@@ -1,16 +1,37 @@
 "use client";
 
-import { FaRegCalendarAlt } from "react-icons/fa";
-import { FaRegEdit } from "react-icons/fa";
+import { FaRegCalendarAlt, FaRegEdit } from "react-icons/fa";
+import { useRouter } from "next/navigation";
+import ProtectedRoute from '../components/ProtectedRoute';
+import { useAuth } from '../context/AuthContext';
 
 export default function DashboardPage() {
   return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
+  );
+}
+
+function DashboardContent() {
+  const router = useRouter();
+  const { logout } = useAuth();
+
+  return (
     <div className="relative min-h-screen">
+      {/* Botón de cerrar sesión */}
+      <button
+        onClick={logout}
+        className="absolute top-6 right-6 z-20 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+      >
+        Cerrar Sesión
+      </button>
+
       {/* Imagen de fondo */}
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage: "url('/policias.jpg')", // asegúrate que esté en /public/policias.jpg
+          backgroundImage: "url('/policias.jpg')",
         }}
       >
         <div className="absolute inset-0 bg-black opacity-40"></div>
@@ -27,6 +48,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
           {/* Botón Eventos */}
           <button
+            onClick={() => router.push("/event")}
             className="bg-[#1D3557] p-6 rounded-lg shadow-lg flex flex-col items-center text-center w-[250px] 
                        transform transition duration-300 hover:scale-105 hover:shadow-xl hover:bg-[#243B6B] focus:outline-none"
           >

@@ -7,7 +7,7 @@ class LoginDto { email: string; password: string; }
 
 @Controller('auth')
 export class AuthController {
-  constructor(private auth: AuthService) {}
+  constructor(private auth: AuthService) { }
 
   @Post('login')
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
@@ -16,7 +16,7 @@ export class AuthController {
     res.cookie('access_token', token, {
       httpOnly: true,
       sameSite: 'lax',
-      secure: process.env.COOKIE_SECURE === 'true',
+      secure: process.env.COOKIE_SECURE === 'true', // en .env pon COOKIE_SECURE=false
       maxAge: 15 * 60 * 1000,
       path: '/',
     });
@@ -28,5 +28,16 @@ export class AuthController {
   me(@Req() req: any) {
     // req.user viene de JwtStrategy
     return { ok: true, userId: req.user.userId, role: req.user.role };
+  }
+
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.COOKIE_SECURE === 'true',
+      path: '/',
+    });
+    return { ok: true, message: 'Sesión cerrada' };
   }
 }

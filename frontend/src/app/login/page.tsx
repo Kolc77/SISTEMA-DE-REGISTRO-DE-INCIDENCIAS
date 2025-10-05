@@ -1,17 +1,19 @@
 "use client";
 
 import { useState } from "react";
-
-
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 
 type LoginResponse = {
   ok: boolean;
-  role?: "ADMIN" | "USER";
+  role?: "ADMIN" | "CAPTURISTA";
   nombre?: string;
   message?: string;
 };
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { refreshUser } = useAuth();
   const [usuario, setUsuario] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,13 +25,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("http://localhost:3001/auth/login", {
         method: "POST",
-        credentials: "include", // ← importante para cookies httpOnly
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: usuario,        // el back espera email
-          password: contrasena,  // y password
+          email: usuario,
+          password: contrasena,
         }),
       });
 
@@ -40,8 +42,10 @@ export default function LoginPage() {
         return;
       }
 
-      // Redirige siempre a /home tras login exitoso
-      window.location.href = "/home";
+      if (res.ok && data.ok) {
+        await refreshUser();
+        router.push("/home");
+      }
     } catch {
       setErr("No se pudo conectar con el servidor.");
     } finally {
@@ -52,14 +56,12 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <div className="relative w-full max-w-[900px] h-auto md:h-[550px] bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Esquinas decorativas */}
         <div className="hidden md:block absolute top-4 left-4 w-5 h-5 border-2 border-gray-300 rounded-full" />
         <div className="hidden md:block absolute top-4 right-4 w-5 h-5 border-2 border-gray-300 rounded-full" />
         <div className="hidden md:block absolute bottom-4 left-4 w-5 h-5 border-2 border-gray-300 rounded-full" />
         <div className="hidden md:block absolute bottom-4 right-4 w-5 h-5 border-2 border-gray-300 rounded-full" />
 
         <div className="relative h-full flex flex-col md:flex-row">
-          {/* Izquierda (logo) desktop */}
           <div
             className="hidden md:flex absolute left-0 top-0 h-full bg-white items-center justify-center"
             style={{
@@ -77,7 +79,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Logo mobile */}
           <div className="md:hidden w-full bg-white flex items-center justify-center py-8">
             <img
               src="/logo-durango.png"
@@ -86,7 +87,6 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Derecha (form) desktop */}
           <div
             className="hidden md:flex absolute right-0 top-0 h-full flex-col justify-center items-center"
             style={{
@@ -147,9 +147,6 @@ export default function LoginPage() {
               </button>
             </form>
           </div>
-
-          {/* (Opcional) Form en mobile: si quieres que también se pueda loguear en móvil,
-              duplica el mismo <form> aquí debajo del logo cuando md:hidden */}
         </div>
       </div>
     </div>

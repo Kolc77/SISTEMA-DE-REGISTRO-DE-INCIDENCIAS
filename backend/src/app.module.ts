@@ -9,6 +9,11 @@ import { AppService } from './app.service';
 import { Usuario } from './users/usuario.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { EventosModule } from './eventos/eventos.module';
+import { IncidenciasModule } from './incidencias/incidencias.module';
+import { CorporacionesModule } from './corporaciones/corporaciones.module';
+import { MotivosModule } from './motivos/motivos.module';
+import { EvidenciasModule } from './evidencias/evidencias.module';
 
 @Module({
   imports: [
@@ -35,6 +40,11 @@ import { AuthModule } from './auth/auth.module';
     // 4) Módulos de tu app
     UsersModule,
     AuthModule,
+    EventosModule,
+    IncidenciasModule,
+    CorporacionesModule,
+    MotivosModule,
+    EvidenciasModule,
   ],
   controllers: [AppController],
   providers: [AppService],

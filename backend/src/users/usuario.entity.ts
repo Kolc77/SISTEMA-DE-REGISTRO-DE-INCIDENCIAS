@@ -15,7 +15,7 @@ export class Usuario {
   passwordHash: string;
 
   @Column({ name: 'rol', type: 'varchar', length: 20 })
-  rol: 'ADMIN' | 'USER';
+  rol: 'ADMIN' | 'CAPTURISTA';
 
   @Column({ name: 'estatus', type: 'varchar', length: 20, default: 'ACTIVO' })
   estatus: 'ACTIVO' | 'INACTIVO';

@@ -1,6 +1,14 @@
-// app/page.js
-import { redirect } from "next/navigation";
+"use client";
 
-export default function Home() {
-  redirect("/login"); // redirige automáticamente al cargar localhost:3000
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function RootPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/login");
+  }, [router]);
+
+  return null;
 }
