@@ -114,7 +114,7 @@ function GestionIncidenciasContent() {
 
   const fetchCorporaciones = async () => {
     try {
-      const res = await fetch("http://localhost:3001/corporaciones", {
+      const res = await fetch("http://localhost:3001/corporaciones/activas", {
         credentials: 'include',
       });
       const data = await res.json();
@@ -126,7 +126,7 @@ function GestionIncidenciasContent() {
 
   const fetchMotivos = async () => {
     try {
-      const res = await fetch("http://localhost:3001/motivos", {
+      const res = await fetch("http://localhost:3001/motivos/activos", {
         credentials: 'include',
       });
       const data = await res.json();

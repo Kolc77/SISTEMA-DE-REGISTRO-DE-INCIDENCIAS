@@ -14,30 +14,26 @@ import { IncidenciasModule } from './incidencias/incidencias.module';
 import { CorporacionesModule } from './corporaciones/corporaciones.module';
 import { MotivosModule } from './motivos/motivos.module';
 import { EvidenciasModule } from './evidencias/evidencias.module';
+import { UsuariosAdminModule } from './usuario-admin/usuario-admin.module'; // ← CAMBIAR AQUÍ
 
 @Module({
   imports: [
-    // 1) Carga variables de entorno (.env) en toda la app
     ConfigModule.forRoot({ isGlobal: true }),
 
-    // 2) Conexión a Postgres (Neon) con SSL explícito
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
         type: 'postgres',
-        url: cfg.get<string>('DATABASE_URL'), // toma tu cadena de Neon
+        url: cfg.get<string>('DATABASE_URL'),
         autoLoadEntities: true,
-        synchronize: false, // ⚠️ en prod siempre false
-        // Neon suele requerir SSL explícito:
+        synchronize: false,
         ssl: { rejectUnauthorized: false },
         extra: { ssl: { rejectUnauthorized: false } },
       }),
     }),
 
-    // 3) Repos/entidades que usarán tus servicios
     TypeOrmModule.forFeature([Usuario]),
 
-    // 4) Módulos de tu app
     UsersModule,
     AuthModule,
     EventosModule,
@@ -45,6 +41,7 @@ import { EvidenciasModule } from './evidencias/evidencias.module';
     CorporacionesModule,
     MotivosModule,
     EvidenciasModule,
+    UsuariosAdminModule, // ← USAR ESTE
   ],
   controllers: [AppController],
   providers: [AppService],

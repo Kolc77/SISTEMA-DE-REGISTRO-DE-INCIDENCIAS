@@ -1,6 +1,6 @@
 "use client";
 
-import { FaRegCalendarAlt, FaRegEdit } from "react-icons/fa";
+import { FaRegCalendarAlt, FaUsers } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useAuth } from '../context/AuthContext';
@@ -15,7 +15,7 @@ export default function DashboardPage() {
 
 function DashboardContent() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, isAdmin } = useAuth();
 
   return (
     <div className="relative min-h-screen">
@@ -45,8 +45,8 @@ function DashboardContent() {
         </h1>
 
         {/* Tarjetas como botones */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-          {/* Botón Eventos */}
+        <div className={`grid grid-cols-1 ${isAdmin ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-8 mt-6 ${!isAdmin ? 'justify-items-center' : ''}`}>
+          {/* Botón Eventos - Visible para todos */}
           <button
             onClick={() => router.push("/event")}
             className="bg-[#1D3557] p-6 rounded-lg shadow-lg flex flex-col items-center text-center w-[250px] 
@@ -57,17 +57,20 @@ function DashboardContent() {
             <p className="text-sm mt-2">"Consultar historial de eventos"</p>
           </button>
 
-          {/* Botón Crear Evento */}
-          <button
-            className="bg-[#1D3557] p-6 rounded-lg shadow-lg flex flex-col items-center text-center w-[250px] 
-                       transform transition duration-300 hover:scale-105 hover:shadow-xl hover:bg-[#243B6B] focus:outline-none"
-          >
-            <FaRegEdit className="text-white text-4xl mb-4" />
-            <h2 className="text-xl font-semibold">Crear evento</h2>
-            <p className="text-sm mt-2">
-              "Haz clic aquí para registrar un nuevo evento."
-            </p>
-          </button>
+          {/* Botón Gestión de Usuarios - Solo para ADMIN */}
+          {isAdmin && (
+            <button
+              onClick={() => router.push("../admin")}
+              className="bg-[#1D3557] p-6 rounded-lg shadow-lg flex flex-col items-center text-center w-[250px] 
+                         transform transition duration-300 hover:scale-105 hover:shadow-xl hover:bg-[#243B6B] focus:outline-none"
+            >
+              <FaUsers className="text-white text-4xl mb-4" />
+              <h2 className="text-xl font-semibold">Gestión de usuarios</h2>
+              <p className="text-sm mt-2">
+                "Administrar usuarios del sistema"
+              </p>
+            </button>
+          )}
         </div>
 
         {/* Texto esquina inferior derecha */}

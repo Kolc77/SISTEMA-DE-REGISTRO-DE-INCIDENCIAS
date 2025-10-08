@@ -105,6 +105,9 @@ export class CorporacionesService {
       { estatus: 'INACTIVO' },
     );
 
+
     return { ok: true, message: `Corporación ${id} desactivada correctamente` };
   }
+
+  
 }
