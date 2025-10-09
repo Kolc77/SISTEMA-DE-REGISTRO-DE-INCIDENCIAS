@@ -20,14 +20,27 @@ export class AuthController {
       maxAge: 15 * 60 * 1000,
       path: '/',
     });
-    return { ok: true, role: user.rol, nombre: user.nombre };
+    return { ok: true, userId: user.idUsuario, role: user.rol, nombre: user.nombre };
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(@Req() req: any) {
-    // req.user viene de JwtStrategy
-    return { ok: true, userId: req.user.userId, role: req.user.role };
+  async me(@Req() req: any) {
+    if (!req?.user?.userId) {
+      return { ok: false, message: 'No autenticado' };
+    }
+
+    const user = await this.auth.getUserById(req.user.userId);
+    if (!user) {
+      return { ok: false, message: 'Usuario no encontrado' };
+    }
+
+    return {
+      ok: true,
+      userId: user.idUsuario,
+      role: user.rol,
+      nombre: user.nombre,
+    };
   }
 
   @Post('logout')

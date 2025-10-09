@@ -15,11 +15,15 @@ export class AuthService {
     return user;
   }
 
-  signAccess(user: { idUsuario: number; rol: string }) {
-    const payload = { sub: user.idUsuario, role: user.rol };
+  signAccess(user: { idUsuario: number; rol: string; nombre: string }) {
+    const payload = { sub: user.idUsuario, role: user.rol, nombre: user.nombre };
     return this.jwt.sign(payload, {
       secret: process.env.JWT_SECRET!,
       expiresIn: process.env.JWT_EXPIRES_IN || '15m',
     });
+  }
+
+  getUserById(userId: number) {
+    return this.users.findById(userId);
   }
 }

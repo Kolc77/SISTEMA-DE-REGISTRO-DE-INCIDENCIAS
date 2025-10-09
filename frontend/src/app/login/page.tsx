@@ -6,6 +6,7 @@ import { useAuth } from "@/app/context/AuthContext";
 
 type LoginResponse = {
   ok: boolean;
+  userId?: number;
   role?: "ADMIN" | "CAPTURISTA";
   nombre?: string;
   message?: string;
@@ -13,7 +14,7 @@ type LoginResponse = {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { refreshUser } = useAuth();
+  const { refreshUser, setSessionUser } = useAuth();
   const [usuario, setUsuario] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,15 @@ export default function LoginPage() {
       }
 
       if (res.ok && data.ok) {
-        await refreshUser();
+        if (data.userId && data.role) {
+          setSessionUser({
+            userId: data.userId,
+            role: data.role,
+            nombre: data.nombre,
+          });
+        } else {
+          await refreshUser();
+        }
         router.push("/home");
       }
     } catch {

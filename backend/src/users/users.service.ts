@@ -12,4 +12,10 @@ export class UsersService {
       where: { correo: email },
     });
   }
+
+  findById(id: number) {
+    return this.repo.findOne({
+      where: { idUsuario: id },
+    });
+  }
 }

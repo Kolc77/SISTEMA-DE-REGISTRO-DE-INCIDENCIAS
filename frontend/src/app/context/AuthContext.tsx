@@ -17,6 +17,7 @@ interface AuthContextType {
   isCapturista: boolean;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  setSessionUser: (payload: { userId: number; role: User['role']; nombre?: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +27,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('authUser');
+    if (stored) {
+      try {
+        const parsed: User = JSON.parse(stored);
+        setUser(parsed);
+        setLoading(false);
+      } catch (err) {
+        sessionStorage.removeItem('authUser');
+      }
+    }
+  }, []);
 
   const fetchUser = async () => {
     try {
@@ -39,16 +53,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser({
             userId: data.userId,
             role: data.role,
+            nombre: data.nombre,
           });
+          sessionStorage.setItem('authUser', JSON.stringify({
+            userId: data.userId,
+            role: data.role,
+            nombre: data.nombre,
+          }));
         } else {
           setUser(null);
+          sessionStorage.removeItem('authUser');
         }
       } else {
         setUser(null);
+        sessionStorage.removeItem('authUser');
       }
     } catch (error) {
       console.error('Error fetching user:', error);
       setUser(null);
+      sessionStorage.removeItem('authUser');
     } finally {
       setLoading(false);
     }
@@ -75,8 +98,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error logout:', error);
     } finally {
       setUser(null);
+      sessionStorage.removeItem('authUser');
       router.push('/login');
     }
+  };
+
+  const setSessionUser = (payload: { userId: number; role: User['role']; nombre?: string }) => {
+    setUser({
+      userId: payload.userId,
+      role: payload.role,
+      nombre: payload.nombre,
+    });
+    setLoading(false);
+    sessionStorage.setItem('authUser', JSON.stringify({
+      userId: payload.userId,
+      role: payload.role,
+      nombre: payload.nombre,
+    }));
   };
 
   const value = {
@@ -87,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isCapturista: user?.role === 'CAPTURISTA',
     logout,
     refreshUser: fetchUser,
+    setSessionUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

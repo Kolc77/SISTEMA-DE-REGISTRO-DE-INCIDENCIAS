@@ -362,12 +362,6 @@ function GestionIncidenciasContent() {
   return (
     <div className="min-h-screen px-6 py-10 bg-gray-50">
       <div className="flex items-center gap-4 mb-4">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-500 text-white hover:bg-gray-600 transition-colors"
-        >
-          <FaArrowLeft /> Regresar
-        </button>
         <div className="flex-1">
           <h1 className="text-2xl font-semibold text-gray-800">
             Gestión de Incidencias

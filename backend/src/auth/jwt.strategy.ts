@@ -13,8 +13,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       secretOrKey: process.env.JWT_SECRET!,
     });
   }
-  async validate(payload: { sub: number; role: string }) {
-    // Lo que retornes aquí va en req.user
-    return { userId: payload.sub, role: payload.role };
+
+  async validate(payload: { sub: number; role: string; nombre?: string }) {
+    // Lo que retornes aqui va en req.user
+    return { userId: payload.sub, role: payload.role, nombre: payload.nombre };
   }
 }
