@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { FaPen, FaTrash, FaEye, FaUpload, FaTimes, FaFile, FaDownload } from "react-icons/fa";
+import { useParams, useRouter } from "next/navigation";
+import { FaArrowLeft, FaPen, FaTrash, FaEye, FaUpload, FaTimes, FaFile, FaDownload, FaChartBar } from "react-icons/fa";
 import { useAuth } from '../../context/AuthContext';
 import ProtectedRoute from '../../components/ProtectedRoute';
 
@@ -69,6 +69,9 @@ function GestionIncidenciasContent() {
   const [filtroId, setFiltroId] = useState("");
   const [filtroDescripcion, setFiltroDescripcion] = useState("");
   const [filtroFecha, setFiltroFecha] = useState("");
+  const [filtroHora, setFiltroHora] = useState("");
+  const [filtroMotivo, setFiltroMotivo] = useState("");
+  const [filtroCorporacion, setFiltroCorporacion] = useState("");
 
   const { user, isAdmin, logout } = useAuth();
 
@@ -169,6 +172,21 @@ function GestionIncidenciasContent() {
         return fechaIncidencia === filtroFecha;
       });
     }
+    if (filtroHora) {
+      resultado = resultado.filter(
+        (i) => i.hora && i.hora.substring(0, 5) === filtroHora
+      );
+    }
+    if (filtroMotivo) {
+      resultado = resultado.filter(
+        (i) => i.id_motivo?.toString() === filtroMotivo
+      );
+    }
+    if (filtroCorporacion) {
+      resultado = resultado.filter(
+        (i) => i.id_corporacion?.toString() === filtroCorporacion
+      );
+    }
     setIncidenciasFiltradas(resultado);
   };
 
@@ -176,38 +194,44 @@ function GestionIncidenciasContent() {
     setFiltroId("");
     setFiltroDescripcion("");
     setFiltroFecha("");
+    setFiltroHora("");
+    setFiltroMotivo("");
+    setFiltroCorporacion("");
     setIncidenciasFiltradas(incidencias);
   };
 
   const crearIncidencia = async () => {
-  if (
-    !nuevaIncidencia.fecha ||
-    !nuevaIncidencia.hora ||
-    !nuevaIncidencia.id_corporacion ||
-    !nuevaIncidencia.id_motivo ||
-    !nuevaIncidencia.ubicacion ||
-    !nuevaIncidencia.descripcion
-  ) {
-    alert("Por favor completa todos los campos obligatorios");
-    return;
-  }
+    if (
+      !nuevaIncidencia.fecha ||
+      !nuevaIncidencia.hora ||
+      !nuevaIncidencia.id_corporacion ||
+      !nuevaIncidencia.id_motivo ||
+      !nuevaIncidencia.ubicacion ||
+      !nuevaIncidencia.descripcion
+    ) {
+      alert("Por favor completa todos los campos obligatorios");
+      return;
+    }
 
-  if (archivosEvidencia.length === 0) {
-    alert("Debes subir al menos una evidencia (foto o PDF)");
-    return;
-  }
+    if (archivosEvidencia.length === 0) {
+      alert("Debes subir al menos una evidencia (foto o PDF)");
+      return;
+    }
 
-  // 👇 AQUI agregamos el log para depurar
-  console.log("Payload incidencia a enviar:", nuevaIncidencia);
+    if (!user?.userId) {
+      alert("No fue posible identificar al usuario que sube la evidencia");
+      return;
+    }
 
-  try {
-    const res = await fetch("http://localhost:3001/incidencias", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: 'include', // ← IMPORTANTE
-      body: JSON.stringify(nuevaIncidencia),
-    });
+    const usuarioId = user.userId;
 
+    try {
+      const res = await fetch("http://localhost:3001/incidencias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: 'include',
+        body: JSON.stringify(nuevaIncidencia),
+      });
 
       if (!res.ok) throw new Error("Error al crear incidencia");
 
@@ -217,12 +241,20 @@ function GestionIncidenciasContent() {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("id_incidencia", incidenciaCreada.id_incidencia.toString());
-        formData.append("usuario_subio", "1");
+        formData.append("usuario_subio", usuarioId.toString());
 
-        return fetch("http://localhost:3001/evidencias/upload", {
+        const respuesta = await fetch("http://localhost:3001/evidencias/upload", {
           method: "POST",
+          credentials: 'include',
           body: formData,
         });
+
+        if (!respuesta.ok) {
+          const detalle = await respuesta.text();
+          throw new Error(detalle || "Error al registrar evidencia");
+        }
+
+        return respuesta.json();
       });
 
       await Promise.all(promesasEvidencias);
@@ -238,7 +270,7 @@ function GestionIncidenciasContent() {
         id_motivo: 0,
         ubicacion: "",
         descripcion: "",
-        usuario_crea: user?.userId || 0,
+        usuario_crea: usuarioId,
         estatus: "ABIERTA",
       });
       fetchIncidencias();
@@ -254,6 +286,13 @@ function GestionIncidenciasContent() {
       return;
     }
 
+    if (!user?.userId) {
+      alert("No fue posible identificar al usuario que sube la evidencia");
+      return;
+    }
+
+    const usuarioId = user.userId;
+
     setSubiendoEvidencia(true);
 
     try {
@@ -261,12 +300,20 @@ function GestionIncidenciasContent() {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("id_incidencia", incidenciaParaEvidencia.toString());
-        formData.append("usuario_subio", "1");
+        formData.append("usuario_subio", usuarioId.toString());
 
-        return fetch("http://localhost:3001/evidencias/upload", {
+        const respuesta = await fetch("http://localhost:3001/evidencias/upload", {
           method: "POST",
+          credentials: 'include',
           body: formData,
         });
+
+        if (!respuesta.ok) {
+          const detalle = await respuesta.text();
+          throw new Error(detalle || "Error al registrar evidencia");
+        }
+
+        return respuesta.json();
       });
 
       await Promise.all(promesas);
@@ -411,6 +458,40 @@ function GestionIncidenciasContent() {
           className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-52 text-gray-800"
         />
 
+        <input
+          type="time"
+          placeholder="Filtrar por hora"
+          value={filtroHora}
+          onChange={(e) => setFiltroHora(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-44 text-gray-800"
+        />
+
+        <select
+          value={filtroCorporacion}
+          onChange={(e) => setFiltroCorporacion(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-64 text-gray-800 bg-white"
+        >
+          <option value="">Todas las corporaciones</option>
+          {corporaciones.map((corp) => (
+            <option key={corp.id_corporacion} value={corp.id_corporacion}>
+              {corp.nombre_corporacion}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filtroMotivo}
+          onChange={(e) => setFiltroMotivo(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-64 text-gray-800 bg-white"
+        >
+          <option value="">Todos los motivos</option>
+          {motivos.map((motivo) => (
+            <option key={motivo.id_motivo} value={motivo.id_motivo}>
+              {motivo.nombre_motivo}
+            </option>
+          ))}
+        </select>
+
         <button
           onClick={aplicarFiltros}
           className="flex items-center gap-2 px-5 py-2 rounded-md bg-[#1D3557] text-white shadow hover:bg-[#2d4a6f] transition-colors"
@@ -423,6 +504,14 @@ function GestionIncidenciasContent() {
           className="flex items-center gap-2 px-5 py-2 rounded-md bg-gray-500 text-white shadow hover:bg-gray-600 transition-colors"
         >
           Limpiar
+        </button>
+
+        <button
+          onClick={() => router.push(`/incidencias/${idEvento}/estadisticas`)}
+          className="flex items-center gap-2 px-5 py-2 rounded-md bg-[#457B9D] text-white shadow hover:bg-[#2f5a72] transition-colors"
+        >
+          <FaChartBar />
+          Ver estadísticas
         </button>
 
         <button
@@ -529,7 +618,12 @@ function GestionIncidenciasContent() {
             ) : (
               <tr>
                 <td colSpan={9} className="text-center py-6 text-gray-700">
-                  {filtroId || filtroDescripcion || filtroFecha
+                  {filtroId ||
+                  filtroDescripcion ||
+                  filtroFecha ||
+                  filtroHora ||
+                  filtroMotivo ||
+                  filtroCorporacion
                     ? "No se encontraron incidencias con los filtros aplicados"
                     : "No hay incidencias registradas para este evento"}
                 </td>
@@ -1065,3 +1159,5 @@ function GestionIncidenciasContent() {
     </div>
   );
 }
+
+

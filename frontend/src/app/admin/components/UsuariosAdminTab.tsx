@@ -130,7 +130,7 @@ export default function UsuariosAdminTab() {
     <div className="space-y-6 text-gray-800">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-[#1D3557]">
-          Usuarios Administradores
+          Usuarios 
         </h2>
         <button
           onClick={() => {
