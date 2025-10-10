@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { FaArrowLeft, FaPen, FaTrash, FaEye, FaUpload, FaTimes, FaFile, FaDownload, FaChartBar } from "react-icons/fa";
 import { useAuth } from '../../context/AuthContext';
 import ProtectedRoute from '../../components/ProtectedRoute';
-import router from "next/router";
 
 interface Evidencia {
   id_evidencia: number;
@@ -54,6 +53,7 @@ export default function GestionIncidenciasPage() {
 function GestionIncidenciasContent() {
   const params = useParams();
   const idEvento = params.id as string;
+  const router = useRouter();
 
   const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
   const [incidenciasFiltradas, setIncidenciasFiltradas] = useState<Incidencia[]>([]);
