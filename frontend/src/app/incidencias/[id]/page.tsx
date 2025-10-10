@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FaArrowLeft, FaPen, FaTrash, FaEye, FaUpload, FaTimes, FaFile, FaDownload } from "react-icons/fa";
+import { FaArrowLeft, FaPen, FaTrash, FaEye, FaUpload, FaTimes, FaFile, FaDownload, FaChartBar } from "react-icons/fa";
 import { useAuth } from '../../context/AuthContext';
 import ProtectedRoute from '../../components/ProtectedRoute';
 
@@ -70,6 +70,9 @@ function GestionIncidenciasContent() {
   const [filtroId, setFiltroId] = useState("");
   const [filtroDescripcion, setFiltroDescripcion] = useState("");
   const [filtroFecha, setFiltroFecha] = useState("");
+  const [filtroHora, setFiltroHora] = useState("");
+  const [filtroMotivo, setFiltroMotivo] = useState("");
+  const [filtroCorporacion, setFiltroCorporacion] = useState("");
 
   const { user, isAdmin, logout } = useAuth();
 
@@ -166,6 +169,21 @@ function GestionIncidenciasContent() {
         return fechaIncidencia === filtroFecha;
       });
     }
+    if (filtroHora) {
+      resultado = resultado.filter(
+        (i) => i.hora && i.hora.substring(0, 5) === filtroHora
+      );
+    }
+    if (filtroMotivo) {
+      resultado = resultado.filter(
+        (i) => i.id_motivo?.toString() === filtroMotivo
+      );
+    }
+    if (filtroCorporacion) {
+      resultado = resultado.filter(
+        (i) => i.id_corporacion?.toString() === filtroCorporacion
+      );
+    }
     setIncidenciasFiltradas(resultado);
   };
 
@@ -173,6 +191,9 @@ function GestionIncidenciasContent() {
     setFiltroId("");
     setFiltroDescripcion("");
     setFiltroFecha("");
+    setFiltroHora("");
+    setFiltroMotivo("");
+    setFiltroCorporacion("");
     setIncidenciasFiltradas(incidencias);
   };
 
@@ -408,6 +429,40 @@ function GestionIncidenciasContent() {
           className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-52 text-gray-800"
         />
 
+        <input
+          type="time"
+          placeholder="Filtrar por hora"
+          value={filtroHora}
+          onChange={(e) => setFiltroHora(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-44 text-gray-800"
+        />
+
+        <select
+          value={filtroCorporacion}
+          onChange={(e) => setFiltroCorporacion(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-64 text-gray-800 bg-white"
+        >
+          <option value="">Todas las corporaciones</option>
+          {corporaciones.map((corp) => (
+            <option key={corp.id_corporacion} value={corp.id_corporacion}>
+              {corp.nombre_corporacion}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filtroMotivo}
+          onChange={(e) => setFiltroMotivo(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-64 text-gray-800 bg-white"
+        >
+          <option value="">Todos los motivos</option>
+          {motivos.map((motivo) => (
+            <option key={motivo.id_motivo} value={motivo.id_motivo}>
+              {motivo.nombre_motivo}
+            </option>
+          ))}
+        </select>
+
         <button
           onClick={aplicarFiltros}
           className="flex items-center gap-2 px-5 py-2 rounded-md bg-[#1D3557] text-white shadow hover:bg-[#2d4a6f] transition-colors"
@@ -420,6 +475,14 @@ function GestionIncidenciasContent() {
           className="flex items-center gap-2 px-5 py-2 rounded-md bg-gray-500 text-white shadow hover:bg-gray-600 transition-colors"
         >
           Limpiar
+        </button>
+
+        <button
+          onClick={() => router.push(`/incidencias/${idEvento}/estadisticas`)}
+          className="flex items-center gap-2 px-5 py-2 rounded-md bg-[#457B9D] text-white shadow hover:bg-[#2f5a72] transition-colors"
+        >
+          <FaChartBar />
+          Ver estadísticas
         </button>
 
         <button
@@ -526,7 +589,12 @@ function GestionIncidenciasContent() {
             ) : (
               <tr>
                 <td colSpan={9} className="text-center py-6 text-gray-700">
-                  {filtroId || filtroDescripcion || filtroFecha
+                  {filtroId ||
+                  filtroDescripcion ||
+                  filtroFecha ||
+                  filtroHora ||
+                  filtroMotivo ||
+                  filtroCorporacion
                     ? "No se encontraron incidencias con los filtros aplicados"
                     : "No hay incidencias registradas para este evento"}
                 </td>
