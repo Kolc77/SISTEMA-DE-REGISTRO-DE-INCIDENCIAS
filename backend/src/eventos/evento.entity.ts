@@ -11,8 +11,8 @@ export class Evento {
   @Column({ type: 'date' })
   fecha_inicio: Date;
 
-  @Column({ type: 'date' })
-  fecha_fin: Date;
+  @Column({ type: 'date', nullable: true })
+  fecha_fin: Date | null;
 
   @Column({ length: 255, nullable: true })
   ubicacion: string;

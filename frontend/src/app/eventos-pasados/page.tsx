@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { FaPen, FaTrash, FaEye, FaTimes } from "react-icons/fa";
-import { useAuth } from '../context/AuthContext';
-import ProtectedRoute from '../components/ProtectedRoute';
-
+import { FaEye, FaPen, FaTrash, FaTimes } from "react-icons/fa";
+import ProtectedRoute from "../components/ProtectedRoute";
+import { useAuth } from "../context/AuthContext";
 
 interface Evento {
   id_evento: number;
@@ -17,130 +15,88 @@ interface Evento {
   estatus: string;
 }
 
-export default function EventosActivosPage() {
+export default function EventosPasadosPage() {
   return (
     <ProtectedRoute>
-      <EventosActivos />
+      <EventosPasados />
     </ProtectedRoute>
   );
 }
 
-function EventosActivos() {
-  const router = useRouter();
+function EventosPasados() {
+  const { isAdmin, logout } = useAuth();
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [eventosFiltrados, setEventosFiltrados] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
   const [editando, setEditando] = useState<Evento | null>(null);
   const [verDetalle, setVerDetalle] = useState<Evento | null>(null);
-  const [creando, setCreando] = useState(false);
-  const { isAdmin, logout } = useAuth();
-  
-  // Estados para filtros
+
   const [filtroId, setFiltroId] = useState("");
   const [filtroEvento, setFiltroEvento] = useState("");
-  const [filtroFecha, setFiltroFecha] = useState("");
+  const [filtroFechaInicio, setFiltroFechaInicio] = useState("");
+  const [filtroFechaFin, setFiltroFechaFin] = useState("");
 
-  // Nuevo evento para crear
-  const [nuevoEvento, setNuevoEvento] = useState<Partial<Evento>>({
-    nombre_evento: "",
-    fecha_inicio: "",
-    fecha_fin: "",
-    ubicacion: "",
-    descripcion: "",
-    estatus: "ACTIVO"
-  });
+  useEffect(() => {
+    fetchEventos();
+  }, []);
 
-  // Cargar eventos desde backend
   const fetchEventos = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3001/eventos/activos", {
+      const res = await fetch("http://localhost:3001/eventos/inactivos", {
         credentials: "include",
       });
       const data = await res.json();
       setEventos(data);
       setEventosFiltrados(data);
     } catch (error) {
-      console.error("Error cargando eventos:", error);
-      alert("Error al cargar eventos");
+      console.error("Error cargando eventos pasados:", error);
+      alert("Error al cargar los eventos pasados");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchEventos();
-  }, []);
-
-  // Aplicar filtros
   const aplicarFiltros = () => {
     let resultado = [...eventos];
 
     if (filtroId) {
-      resultado = resultado.filter(e => 
-        e.id_evento.toString().includes(filtroId)
+      resultado = resultado.filter((evento) =>
+        evento.id_evento.toString().includes(filtroId)
       );
     }
 
     if (filtroEvento) {
-      resultado = resultado.filter(e =>
-        e.nombre_evento.toLowerCase().includes(filtroEvento.toLowerCase())
+      resultado = resultado.filter((evento) =>
+        evento.nombre_evento.toLowerCase().includes(filtroEvento.toLowerCase())
       );
     }
 
-    if (filtroFecha) {
-      resultado = resultado.filter(e => {
-        const fechaEvento = new Date(e.fecha_inicio).toISOString().split('T')[0];
-        return fechaEvento === filtroFecha;
+    if (filtroFechaInicio) {
+      resultado = resultado.filter((evento) => {
+        const fecha = evento.fecha_inicio.split("T")[0];
+        return fecha === filtroFechaInicio;
+      });
+    }
+
+    if (filtroFechaFin) {
+      resultado = resultado.filter((evento) => {
+        const fecha = (evento.fecha_fin || "").split("T")[0];
+        return fecha === filtroFechaFin;
       });
     }
 
     setEventosFiltrados(resultado);
   };
 
-  // Limpiar filtros
   const limpiarFiltros = () => {
     setFiltroId("");
     setFiltroEvento("");
-    setFiltroFecha("");
+    setFiltroFechaInicio("");
+    setFiltroFechaFin("");
     setEventosFiltrados(eventos);
   };
 
-  // Crear evento
-  const crearEvento = async () => {
-    if (!nuevoEvento.nombre_evento || !nuevoEvento.fecha_inicio) {
-      alert("Por favor completa los campos obligatorios");
-      return;
-    }
-
-    try {
-      const res = await fetch("http://localhost:3001/eventos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(nuevoEvento),
-      });
-      
-      if (res.ok) {
-        alert("Evento creado exitosamente");
-        setCreando(false);
-        setNuevoEvento({
-          nombre_evento: "",
-          fecha_inicio: "",
-          fecha_fin: "",
-          ubicacion: "",
-          descripcion: "",
-          estatus: "ACTIVO"
-        });
-        fetchEventos();
-      }
-    } catch (error) {
-      console.error("Error creando evento:", error);
-      alert("Error al crear evento");
-    }
-  };
-
-  // Eliminar evento
   const eliminarEvento = async (id: number) => {
     if (!confirm("¿Seguro que deseas eliminar este evento?")) return;
 
@@ -149,18 +105,17 @@ function EventosActivos() {
         method: "DELETE",
         credentials: "include",
       });
-      
+
       if (res.ok) {
-        alert("Evento eliminado exitosamente");
+        alert("Evento eliminado correctamente");
         fetchEventos();
       }
     } catch (error) {
       console.error("Error eliminando evento:", error);
-      alert("Error al eliminar evento");
+      alert("Error al eliminar el evento");
     }
   };
 
-  // Guardar edición
   const guardarEdicion = async () => {
     if (!editando || !editando.nombre_evento || !editando.fecha_inicio) {
       alert("Por favor completa los campos obligatorios");
@@ -174,14 +129,12 @@ function EventosActivos() {
         credentials: "include",
         body: JSON.stringify(editando),
       });
-      
+
       if (res.ok) {
         const actualizado: Evento = await res.json();
-        alert("Evento actualizado exitosamente");
-
+        alert("Evento actualizado correctamente");
         setEditando(null);
-
-        if (actualizado.estatus === "INACTIVO") {
+        if (actualizado.estatus === "ACTIVO") {
           setEventos((prev) => prev.filter((e) => e.id_evento !== actualizado.id_evento));
           setEventosFiltrados((prev) => prev.filter((e) => e.id_evento !== actualizado.id_evento));
         } else {
@@ -192,33 +145,29 @@ function EventosActivos() {
             prev.map((e) => (e.id_evento === actualizado.id_evento ? actualizado : e))
           );
         }
-
         await fetchEventos();
       }
     } catch (error) {
       console.error("Error actualizando evento:", error);
-      alert("Error al actualizar evento");
+      alert("Error al actualizar el evento");
     }
   };
 
-  // Formatear fecha para input date
-  const formatearFechaParaInput = (fecha: string) => {
-    if (!fecha) return "";
-    return fecha.split('T')[0];
-  };
-
-  // Formatear fecha para mostrar en tabla (sin conversión de zona horaria)
-  const formatearFechaParaTabla = (fecha: string) => {
-    if (!fecha) return 'N/A';
-    const [year, month, day] = fecha.split('T')[0].split('-');
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString('es-MX');
+  const formatearFechaParaTabla = (fecha?: string) => {
+    if (!fecha) return "N/A";
+    const [year, month, day] = fecha.split("T")[0].split("-");
+    return new Date(
+      parseInt(year),
+      parseInt(month) - 1,
+      parseInt(day)
+    ).toLocaleDateString("es-MX");
   };
 
   const obtenerClasesEstatus = (estatus: string) => {
-    if (estatus === 'INACTIVO') {
-      return 'bg-red-100 text-red-800';
+    if (estatus === "ACTIVO") {
+      return "bg-green-100 text-green-800";
     }
-    return 'bg-green-100 text-green-800';
+    return "bg-red-100 text-red-800";
   };
 
   return (
@@ -226,10 +175,10 @@ function EventosActivos() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-semibold text-gray-800 mb-2">
-            Eventos Activos
+            Eventos Pasados
           </h1>
-          <p className="text-gray-600">
-            Consulte y gestione el historial de eventos activos
+          <p className="text-sm text-gray-600">
+            Consulta el historial de eventos finalizados. Como administrador puedes editarlos o reactivarlos.
           </p>
         </div>
         <button
@@ -239,86 +188,85 @@ function EventosActivos() {
           Cerrar Sesión
         </button>
       </div>
-      {/* Filtros */}
-      <div className="flex flex-wrap gap-4 mb-6">
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <input
           type="text"
           placeholder="Buscar por ID"
           value={filtroId}
           onChange={(e) => setFiltroId(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-52 text-gray-800"
+          className="p-2 border border-gray-300 rounded-md text-gray-800"
         />
         <input
           type="text"
-          placeholder="Filtrar por nombre de evento"
+          placeholder="Filtrar por nombre"
           value={filtroEvento}
           onChange={(e) => setFiltroEvento(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-64 text-gray-800"
+          className="p-2 border border-gray-300 rounded-md text-gray-800"
         />
         <input
           type="date"
-          placeholder="Filtrar por fecha"
-          value={filtroFecha}
-          onChange={(e) => setFiltroFecha(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-52 text-gray-800"
+          value={filtroFechaInicio}
+          onChange={(e) => setFiltroFechaInicio(e.target.value)}
+          className="p-2 border border-gray-300 rounded-md text-gray-800"
         />
-        <button 
+        <input
+          type="date"
+          value={filtroFechaFin}
+          onChange={(e) => setFiltroFechaFin(e.target.value)}
+          className="p-2 border border-gray-300 rounded-md text-gray-800"
+        />
+      </div>
+
+      <div className="flex justify-end gap-3 mb-6">
+        <button
           onClick={aplicarFiltros}
-          className="flex items-center gap-2 px-5 py-2 rounded-md bg-[#1D3557] text-white shadow hover:bg-[#2d4a6f] transition-colors"
+          className="px-4 py-2 rounded-md bg-[#1D3557] text-white hover:bg-[#2d4a6f] transition-colors"
         >
           Aplicar filtros
         </button>
-        <button 
+        <button
           onClick={limpiarFiltros}
-          className="flex items-center gap-2 px-5 py-2 rounded-md bg-gray-500 text-white shadow hover:bg-gray-600 transition-colors"
+          className="px-4 py-2 rounded-md bg-gray-200 text-gray-900 hover:bg-gray-300 transition-colors"
         >
           Limpiar
         </button>
-        {isAdmin && (
-          <button
-            onClick={() => setCreando(true)}
-            className="flex items-center gap-2 px-5 py-2 rounded-md bg-green-600 text-white shadow hover:bg-green-700 transition-colors"
-          >
-            + Crear evento
-          </button>
-        )}
       </div>
 
-      {/* Tabla */}
-      <div className="overflow-x-auto rounded-lg shadow-md">
-        <table className="min-w-full bg-white border border-gray-200">
+  <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-[#1D3557] text-white">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                 ID
               </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold">
-                EVENTO
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                Evento
               </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold">
-                FECHA INICIO
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                Fecha inicio
               </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold">
-                UBICACIÓN
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                Fecha fin
               </th>
-              <th className="px-6 py-3 text-center text-sm font-semibold">
-                ACCIONES
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                Ubicación
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+                Acciones
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
               <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-700">
+                <td colSpan={6} className="text-center py-6 text-gray-700">
                   Cargando eventos...
                 </td>
               </tr>
             ) : eventosFiltrados.length > 0 ? (
               eventosFiltrados.map((evento) => (
-                <tr
-                  key={evento.id_evento}
-                  className="border-b border-gray-200 hover:bg-gray-50"
-                >
+                <tr key={evento.id_evento} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-800 font-medium">
                     {evento.id_evento}
                   </td>
@@ -329,14 +277,17 @@ function EventosActivos() {
                     {formatearFechaParaTabla(evento.fecha_inicio)}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-800">
-                    {evento.ubicacion || 'N/A'}
+                    {formatearFechaParaTabla(evento.fecha_fin || undefined)}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-800">
+                    {evento.ubicacion || "N/A"}
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex justify-center gap-4">
                       <FaEye
                         className="text-blue-600 cursor-pointer hover:text-blue-700 transition-colors"
-                        onClick={() => router.push(`/incidencias/${evento.id_evento}`)}
-                        title="Ver incidencias"
+                        onClick={() => setVerDetalle(evento)}
+                        title="Ver detalles"
                       />
                       {isAdmin && (
                         <>
@@ -358,10 +309,8 @@ function EventosActivos() {
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-700">
-                  {filtroId || filtroEvento || filtroFecha 
-                    ? "No se encontraron eventos con los filtros aplicados" 
-                    : "No hay eventos activos"}
+                <td colSpan={6} className="text-center py-6 text-gray-600">
+                  No hay eventos pasados que coincidan con tu búsqueda.
                 </td>
               </tr>
             )}
@@ -369,144 +318,24 @@ function EventosActivos() {
         </table>
       </div>
 
-      {/* Modal de Creación */}
-      {creando && (
+      {/* Modal de edición */}
+      {editando && isAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Crear Nuevo Evento</h2>
-              <FaTimes 
-                className="text-gray-500 cursor-pointer hover:text-gray-700"
-                onClick={() => setCreando(false)}
-              />
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre del Evento *
-                </label>
-                <input
-                  type="text"
-                  value={nuevoEvento.nombre_evento}
-                  onChange={(e) =>
-                    setNuevoEvento({ ...nuevoEvento, nombre_evento: e.target.value })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded text-gray-800"
-                  placeholder="Ej: Conferencia Anual 2025"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fecha Inicio *
-                  </label>
-                  <input
-                    type="date"
-                    value={nuevoEvento.fecha_inicio}
-                    onChange={(e) =>
-                      setNuevoEvento({ ...nuevoEvento, fecha_inicio: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded text-gray-800"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fecha Fin
-                  </label>
-                  <input
-                    type="date"
-                    value={nuevoEvento.fecha_fin ?? ""}
-                    onChange={(e) =>
-                      setNuevoEvento({ ...nuevoEvento, fecha_fin: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded text-gray-800"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Ubicación
-                </label>
-                <input
-                  type="text"
-                  value={nuevoEvento.ubicacion}
-                  onChange={(e) =>
-                    setNuevoEvento({ ...nuevoEvento, ubicacion: e.target.value })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded text-gray-800"
-                  placeholder="Ej: Auditorio Principal"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descripción
-                </label>
-                <textarea
-                  value={nuevoEvento.descripcion}
-                  onChange={(e) =>
-                    setNuevoEvento({ ...nuevoEvento, descripcion: e.target.value })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded text-gray-800 min-h-[100px]"
-                  placeholder="Descripción del evento..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Estatus
-                </label>
-                <select
-                  value={nuevoEvento.estatus ?? "ACTIVO"}
-                  onChange={(e) =>
-                    setNuevoEvento({ ...nuevoEvento, estatus: e.target.value as Evento['estatus'] })
-                  }
-                  className="w-full p-2 border border-gray-300 rounded text-gray-800"
-                >
-                  <option value="ACTIVO">ACTIVO</option>
-                  <option value="INACTIVO">INACTIVO</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setCreando(false)}
-                className="px-5 py-2 rounded bg-gray-300 hover:bg-gray-400 text-gray-800 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={crearEvento}
-                className="px-5 py-2 rounded bg-[#1D3557] text-white hover:bg-[#2d4a6f] transition-colors"
-              >
-                Crear Evento
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Edición */}
-      {editando && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Editar Evento</h2>
-              <FaTimes 
+              <h2 className="text-xl font-semibold text-gray-800">
+                Editar evento
+              </h2>
+              <FaTimes
                 className="text-gray-500 cursor-pointer hover:text-gray-700"
                 onClick={() => setEditando(null)}
               />
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre del Evento *
+                  Nombre del evento *
                 </label>
                 <input
                   type="text"
@@ -521,11 +350,11 @@ function EventosActivos() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fecha Inicio *
+                    Fecha inicio *
                   </label>
                   <input
                     type="date"
-                    value={formatearFechaParaInput(editando.fecha_inicio)}
+                    value={editando.fecha_inicio.split("T")[0]}
                     onChange={(e) =>
                       setEditando({ ...editando, fecha_inicio: e.target.value })
                     }
@@ -535,11 +364,11 @@ function EventosActivos() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fecha Fin
+                    Fecha fin
                   </label>
                   <input
                     type="date"
-                    value={formatearFechaParaInput(editando.fecha_fin || "")}
+                    value={(editando.fecha_fin || "").split("T")[0]}
                     onChange={(e) =>
                       setEditando({ ...editando, fecha_fin: e.target.value })
                     }
@@ -582,13 +411,16 @@ function EventosActivos() {
                 <select
                   value={editando.estatus}
                   onChange={(e) =>
-                    setEditando({ ...editando, estatus: e.target.value as Evento['estatus'] })
+                    setEditando({ ...editando, estatus: e.target.value as Evento["estatus"] })
                   }
                   className="w-full p-2 border border-gray-300 rounded text-gray-800"
                 >
-                  <option value="ACTIVO">ACTIVO</option>
                   <option value="INACTIVO">INACTIVO</option>
+                  <option value="ACTIVO">ACTIVO</option>
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Cambia a ACTIVO para reactivar el evento y enviarlo a la lista de eventos activos.
+                </p>
               </div>
             </div>
 
@@ -603,64 +435,61 @@ function EventosActivos() {
                 onClick={guardarEdicion}
                 className="px-5 py-2 rounded bg-[#1D3557] text-white hover:bg-[#2d4a6f] transition-colors"
               >
-                Guardar Cambios
+                Guardar cambios
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal de Ver Detalle */}
+      {/* Modal de detalles */}
       {verDetalle && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Detalles del Evento</h2>
-              <FaTimes 
+              <h2 className="text-xl font-semibold text-gray-800">Detalles del evento</h2>
+              <FaTimes
                 className="text-gray-500 cursor-pointer hover:text-gray-700"
                 onClick={() => setVerDetalle(null)}
               />
             </div>
-            
+
             <div className="space-y-3">
               <div className="border-b pb-2">
-                <p className="text-sm text-gray-600">ID del Evento</p>
+                <p className="text-sm text-gray-600">ID del evento</p>
                 <p className="text-lg font-medium text-gray-800">{verDetalle.id_evento}</p>
               </div>
-              
+
               <div className="border-b pb-2">
                 <p className="text-sm text-gray-600">Nombre</p>
                 <p className="text-lg font-medium text-gray-800">{verDetalle.nombre_evento}</p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="border-b pb-2">
-                  <p className="text-sm text-gray-600">Fecha Inicio</p>
+                  <p className="text-sm text-gray-600">Fecha inicio</p>
                   <p className="text-base text-gray-800">
                     {formatearFechaParaTabla(verDetalle.fecha_inicio)}
                   </p>
                 </div>
-                
                 <div className="border-b pb-2">
-                  <p className="text-sm text-gray-600">Fecha Fin</p>
+                  <p className="text-sm text-gray-600">Fecha fin</p>
                   <p className="text-base text-gray-800">
-                    {verDetalle.fecha_fin 
-                      ? formatearFechaParaTabla(verDetalle.fecha_fin)
-                      : 'No especificada'}
+                    {formatearFechaParaTabla(verDetalle.fecha_fin || undefined)}
                   </p>
                 </div>
               </div>
-              
+
               <div className="border-b pb-2">
                 <p className="text-sm text-gray-600">Ubicación</p>
-                <p className="text-base text-gray-800">{verDetalle.ubicacion || 'No especificada'}</p>
+                <p className="text-base text-gray-800">{verDetalle.ubicacion || "No especificada"}</p>
               </div>
-              
+
               <div className="border-b pb-2">
                 <p className="text-sm text-gray-600">Descripción</p>
-                <p className="text-base text-gray-800">{verDetalle.descripcion || 'Sin descripción'}</p>
+                <p className="text-base text-gray-800">{verDetalle.descripcion || "Sin descripción"}</p>
               </div>
-              
+
               <div>
                 <p className="text-sm text-gray-600">Estatus</p>
                 <span

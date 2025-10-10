@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { FaArrowLeft, FaPen, FaTrash, FaEye, FaUpload, FaTimes, FaFile, FaDownload } from "react-icons/fa";
+import { useParams } from "next/navigation";
+import { FaPen, FaTrash, FaEye, FaUpload, FaTimes, FaFile, FaDownload } from "react-icons/fa";
 import { useAuth } from '../../context/AuthContext';
 import ProtectedRoute from '../../components/ProtectedRoute';
 
@@ -52,7 +52,6 @@ export default function GestionIncidenciasPage() {
 
 function GestionIncidenciasContent() {
   const params = useParams();
-  const router = useRouter();
   const idEvento = params.id as string;
 
   const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
@@ -88,13 +87,17 @@ function GestionIncidenciasContent() {
     estatus: "ABIERTA",
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    Promise.all([
-      fetchIncidencias(),
-      fetchCorporaciones(),
-      fetchMotivos(),
-      fetchEvento(),
-    ]);
+    const loadData = async () => {
+      await Promise.all([
+        fetchIncidencias(),
+        fetchCorporaciones(),
+        fetchMotivos(),
+        fetchEvento(),
+      ]);
+    };
+    loadData();
   }, [idEvento]);
 
   const fetchIncidencias = async () => {

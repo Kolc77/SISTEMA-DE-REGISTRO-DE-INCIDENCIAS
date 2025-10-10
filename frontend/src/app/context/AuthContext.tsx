@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 interface User {
   userId: number;
@@ -26,7 +26,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     const stored = sessionStorage.getItem('authUser');
@@ -35,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const parsed: User = JSON.parse(stored);
         setUser(parsed);
         setLoading(false);
-      } catch (err) {
+      } catch (error) {
         sessionStorage.removeItem('authUser');
       }
     }

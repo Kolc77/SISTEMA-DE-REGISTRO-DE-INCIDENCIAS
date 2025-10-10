@@ -23,6 +23,12 @@ export class EventosController {
     return this.eventosService.findActivos();
   }
 
+  // GET /eventos/inactivos - Obtener eventos inactivos/pasados
+  @Get('inactivos')
+  findInactivos() {
+    return this.eventosService.findInactivos();
+  }
+
   // GET /eventos/:id - Obtener un evento específico
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {

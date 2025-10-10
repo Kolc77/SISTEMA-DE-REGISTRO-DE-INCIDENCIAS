@@ -54,7 +54,7 @@ function DashboardContent() {
           >
             <FaRegCalendarAlt className="text-white text-4xl mb-4" />
             <h2 className="text-xl font-semibold">Eventos</h2>
-            <p className="text-sm mt-2">"Consultar historial de eventos"</p>
+            <p className="text-sm mt-2">Consultar historial de eventos</p>
           </button>
 
           {/* Botón Gestión de Usuarios - Solo para ADMIN */}
@@ -67,7 +67,7 @@ function DashboardContent() {
               <FaUsers className="text-white text-4xl mb-4" />
               <h2 className="text-xl font-semibold">Gestión de usuarios</h2>
               <p className="text-sm mt-2">
-                "Administrar usuarios del sistema"
+                Administrar usuarios del sistema
               </p>
             </button>
           )}
