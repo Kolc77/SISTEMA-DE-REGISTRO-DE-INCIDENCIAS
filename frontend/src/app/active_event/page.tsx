@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FaPen, FaTrash, FaEye, FaTimes } from "react-icons/fa";
 import { useAuth } from '../context/AuthContext';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -25,6 +26,7 @@ export default function EventosActivosPage() {
 }
 
 function EventosActivos() {
+  const router = useRouter();
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [eventosFiltrados, setEventosFiltrados] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -305,7 +307,7 @@ function EventosActivos() {
                     <div className="flex justify-center gap-4">
                       <FaEye
                         className="text-blue-600 cursor-pointer hover:text-blue-700 transition-colors"
-                        onClick={() => window.location.href = `../incidencias/${evento.id_evento}`}
+                        onClick={() => router.push(`/incidencias/${evento.id_evento}`)}
                         title="Ver incidencias"
                       />
                       {isAdmin && (
