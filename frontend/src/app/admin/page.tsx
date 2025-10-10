@@ -20,7 +20,7 @@ export default function AdminPage() {
           }`}
           onClick={() => setTab("usuarios")}
         >
-          Usuarios Admin
+          Usuarios 
         </button>
         <button
           className={`px-4 py-2 rounded-xl ${

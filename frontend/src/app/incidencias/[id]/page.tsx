@@ -198,34 +198,37 @@ function GestionIncidenciasContent() {
   };
 
   const crearIncidencia = async () => {
-  if (
-    !nuevaIncidencia.fecha ||
-    !nuevaIncidencia.hora ||
-    !nuevaIncidencia.id_corporacion ||
-    !nuevaIncidencia.id_motivo ||
-    !nuevaIncidencia.ubicacion ||
-    !nuevaIncidencia.descripcion
-  ) {
-    alert("Por favor completa todos los campos obligatorios");
-    return;
-  }
+    if (
+      !nuevaIncidencia.fecha ||
+      !nuevaIncidencia.hora ||
+      !nuevaIncidencia.id_corporacion ||
+      !nuevaIncidencia.id_motivo ||
+      !nuevaIncidencia.ubicacion ||
+      !nuevaIncidencia.descripcion
+    ) {
+      alert("Por favor completa todos los campos obligatorios");
+      return;
+    }
 
-  if (archivosEvidencia.length === 0) {
-    alert("Debes subir al menos una evidencia (foto o PDF)");
-    return;
-  }
+    if (archivosEvidencia.length === 0) {
+      alert("Debes subir al menos una evidencia (foto o PDF)");
+      return;
+    }
 
-  // 👇 AQUI agregamos el log para depurar
-  console.log("Payload incidencia a enviar:", nuevaIncidencia);
+    if (!user?.userId) {
+      alert("No fue posible identificar al usuario que sube la evidencia");
+      return;
+    }
 
-  try {
-    const res = await fetch("http://localhost:3001/incidencias", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: 'include', // ← IMPORTANTE
-      body: JSON.stringify(nuevaIncidencia),
-    });
+    const usuarioId = user.userId;
 
+    try {
+      const res = await fetch("http://localhost:3001/incidencias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: 'include',
+        body: JSON.stringify(nuevaIncidencia),
+      });
 
       if (!res.ok) throw new Error("Error al crear incidencia");
 
@@ -235,12 +238,20 @@ function GestionIncidenciasContent() {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("id_incidencia", incidenciaCreada.id_incidencia.toString());
-        formData.append("usuario_subio", "1");
+        formData.append("usuario_subio", usuarioId.toString());
 
-        return fetch("http://localhost:3001/evidencias/upload", {
+        const respuesta = await fetch("http://localhost:3001/evidencias/upload", {
           method: "POST",
+          credentials: 'include',
           body: formData,
         });
+
+        if (!respuesta.ok) {
+          const detalle = await respuesta.text();
+          throw new Error(detalle || "Error al registrar evidencia");
+        }
+
+        return respuesta.json();
       });
 
       await Promise.all(promesasEvidencias);
@@ -256,7 +267,7 @@ function GestionIncidenciasContent() {
         id_motivo: 0,
         ubicacion: "",
         descripcion: "",
-        usuario_crea: user?.userId || 0,
+        usuario_crea: usuarioId,
         estatus: "ABIERTA",
       });
       fetchIncidencias();
@@ -272,6 +283,13 @@ function GestionIncidenciasContent() {
       return;
     }
 
+    if (!user?.userId) {
+      alert("No fue posible identificar al usuario que sube la evidencia");
+      return;
+    }
+
+    const usuarioId = user.userId;
+
     setSubiendoEvidencia(true);
 
     try {
@@ -279,12 +297,20 @@ function GestionIncidenciasContent() {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("id_incidencia", incidenciaParaEvidencia.toString());
-        formData.append("usuario_subio", "1");
+        formData.append("usuario_subio", usuarioId.toString());
 
-        return fetch("http://localhost:3001/evidencias/upload", {
+        const respuesta = await fetch("http://localhost:3001/evidencias/upload", {
           method: "POST",
+          credentials: 'include',
           body: formData,
         });
+
+        if (!respuesta.ok) {
+          const detalle = await respuesta.text();
+          throw new Error(detalle || "Error al registrar evidencia");
+        }
+
+        return respuesta.json();
       });
 
       await Promise.all(promesas);
@@ -1130,3 +1156,5 @@ function GestionIncidenciasContent() {
     </div>
   );
 }
+
+
