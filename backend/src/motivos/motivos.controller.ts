@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Param,
   Body,
@@ -20,26 +21,26 @@ export class MotivosController {
   // GET /motivos - Obtener todos los motivos
   @Get()
   findAll() {
-    return this.motivosService.findAll();
+    return this.motivosService.findAll().then((data) => ({ ok: true, data }));
   }
 
   // GET /motivos/activos - Obtener solo motivos activos
   @Get('activos')
   findActivos() {
-    return this.motivosService.findActivos();
+    return this.motivosService.findActivos().then((data) => ({ ok: true, data }));
   }
 
   // GET /motivos/:id - Obtener un motivo específico
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.motivosService.findOne(id);
+    return this.motivosService.findOne(id).then((data) => ({ ok: true, data }));
   }
 
   // POST /motivos - Crear nuevo motivo
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() data: Partial<Motivo>) {
-    return this.motivosService.create(data);
+    return this.motivosService.create(data).then((created) => ({ ok: true, data: created }));
   }
 
   // PUT /motivos/:id - Actualizar motivo
@@ -48,7 +49,13 @@ export class MotivosController {
     @Param('id', ParseIntPipe) id: number,
     @Body() data: Partial<Motivo>,
   ) {
-    return this.motivosService.update(id, data);
+    return this.motivosService.update(id, data).then((updated) => ({ ok: true, data: updated }));
+  }
+
+  // PATCH /motivos/:id/toggle - Alternar estatus ACTIVO/INACTIVO
+  @Patch(':id/toggle')
+  toggle(@Param('id', ParseIntPipe) id: number) {
+    return this.motivosService.toggle(id).then((updated) => ({ ok: true, data: updated }));
   }
 
   // DELETE /motivos/:id - Eliminar motivo (soft delete)

@@ -78,7 +78,8 @@ function EstadisticasIncidenciasContent() {
       const res = await fetch(`http://localhost:3001/incidencias/evento/${idEvento}`, {
         credentials: "include",
       });
-      const data = await res.json();
+      const payload = await res.json();
+      const data = payload?.ok ? (payload.data as Incidencia[]) : [];
       setIncidencias(data);
     } catch (error) {
       console.error("Error cargando incidencias:", error);
@@ -90,7 +91,8 @@ function EstadisticasIncidenciasContent() {
       const res = await fetch("http://localhost:3001/corporaciones/activas", {
         credentials: "include",
       });
-      const data = await res.json();
+      const payload = await res.json();
+      const data = payload?.ok ? (payload.data as Corporacion[]) : [];
       setCorporaciones(data);
     } catch (error) {
       console.error("Error cargando corporaciones:", error);
@@ -102,7 +104,8 @@ function EstadisticasIncidenciasContent() {
       const res = await fetch("http://localhost:3001/motivos/activos", {
         credentials: "include",
       });
-      const data = await res.json();
+      const payload = await res.json();
+      const data = payload?.ok ? (payload.data as Motivo[]) : [];
       setMotivos(data);
     } catch (error) {
       console.error("Error cargando motivos:", error);
@@ -114,8 +117,9 @@ function EstadisticasIncidenciasContent() {
       const res = await fetch(`http://localhost:3001/eventos/${idEvento}`, {
         credentials: "include",
       });
-      const data = await res.json();
-      setNombreEvento(data.nombre_evento);
+      const payload = await res.json();
+      const data = payload?.ok ? payload.data : null;
+      setNombreEvento(data?.nombre_evento || "");
     } catch (error) {
       console.error("Error cargando evento:", error);
     }

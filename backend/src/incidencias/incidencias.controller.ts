@@ -26,7 +26,7 @@ export class IncidenciasController {
   // Rutas públicas (sin auth)
   @Get('evento/:idEvento')
   findByEvento(@Param('idEvento', ParseIntPipe) idEvento: number) {
-    return this.incidenciasService.findByEvento(idEvento);
+    return this.incidenciasService.findByEvento(idEvento).then((data) => ({ ok: true, data }));
   }
 
   @Get('evento/:idEvento/filtrar')
@@ -34,22 +34,22 @@ export class IncidenciasController {
     @Param('idEvento', ParseIntPipe) idEvento: number,
     @Query() filtros: any,
   ) {
-    return this.incidenciasService.filtrar(idEvento, filtros);
+    return this.incidenciasService.filtrar(idEvento, filtros).then((data) => ({ ok: true, data }));
   }
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.incidenciasService.findOne(id);
+    return this.incidenciasService.findOne(id).then((data) => ({ ok: true, data }));
   }
 
   @Get('catalogos/corporaciones')
   getCorporaciones() {
-    return this.incidenciasService.getCorporaciones();
+    return this.incidenciasService.getCorporaciones().then((data) => ({ ok: true, data }));
   }
 
   @Get('catalogos/motivos')
   getMotivos() {
-    return this.incidenciasService.getMotivos();
+    return this.incidenciasService.getMotivos().then((data) => ({ ok: true, data }));
   }
 
   // Crear - ADMIN y CAPTURISTA
@@ -59,7 +59,9 @@ export class IncidenciasController {
   @HttpCode(HttpStatus.CREATED)
   create(@Body() data: Partial<Incidencia>, @Req() req: any) {
     const userId = req.user.userId;
-    return this.incidenciasService.create({ ...data, usuario_crea: userId });
+    return this.incidenciasService
+      .create({ ...data, usuario_crea: userId })
+      .then((created) => ({ ok: true, data: created }));
   }
 
   // Editar - ADMIN puede todo, CAPTURISTA solo sus propias
@@ -82,7 +84,7 @@ export class IncidenciasController {
       }
     }
 
-    return this.incidenciasService.update(id, data);
+    return this.incidenciasService.update(id, data).then((updated) => ({ ok: true, data: updated }));
   }
 
   // Cerrar - ADMIN y CAPTURISTA
@@ -91,7 +93,7 @@ export class IncidenciasController {
   @Roles('ADMIN', 'CAPTURISTA')
   cerrar(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
     const userId = req.user.userId;
-    return this.incidenciasService.cerrar(id, userId);
+    return this.incidenciasService.cerrar(id, userId).then((data) => ({ ok: true, data }));
   }
 
   // Eliminar - SOLO ADMIN

@@ -107,4 +107,17 @@ export class MotivosService {
 
     return { ok: true, message: `Motivo ${id} desactivado correctamente` };
   }
+
+  // Alternar estatus ACTIVO/INACTIVO
+  async toggle(id: number) {
+    const motivo = await this.motivoRepo.findOne({
+      where: { id_motivo: id },
+    });
+    if (!motivo) {
+      throw new NotFoundException(`Motivo con ID ${id} no encontrado`);
+    }
+    const nuevo = motivo.estatus === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+    await this.motivoRepo.update({ id_motivo: id }, { estatus: nuevo });
+    return this.findOne(id);
+  }
 }

@@ -22,8 +22,8 @@ export default function CorporacionesTab() {
     try {
       setLoading(true);
       const res = await fetch(API_URL);
-      const data = await res.json();
-      if (Array.isArray(data)) setCorporaciones(data);
+      const payload = await res.json();
+      if (payload?.ok && Array.isArray(payload.data)) setCorporaciones(payload.data as Corporacion[]);
       else setCorporaciones([]);
     } catch (error) {
       console.error("Error cargando corporaciones:", error);

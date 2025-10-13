@@ -31,14 +31,40 @@ export default function UsuariosAdminTab() {
     try {
       setLoading(true);
       const res = await fetch(API_URL, { credentials: "include" });
-      const data = await res.json();
 
-      if (Array.isArray(data)) {
-        setUsuarios(data);
-      } else if (Array.isArray(data.data)) {
-        setUsuarios(data.data);
+      // Manejo explícito de errores HTTP (401/403/500, etc.)
+      if (!res.ok) {
+        const raw = await res.text().catch(() => "");
+        let payload: any = {};
+        try {
+          payload = raw ? JSON.parse(raw) : {};
+        } catch {
+          // si no es JSON, dejamos raw como texto
+        }
+
+        console.error(
+          `Error HTTP ${res.status} al cargar usuarios:`,
+          Object.keys(payload).length ? payload : raw
+        );
+        setUsuarios([]);
+        return;
+      }
+
+      // Validar que la respuesta sea JSON
+      const ctype = res.headers.get("content-type") || "";
+      if (!ctype.includes("application/json")) {
+        const raw = await res.text().catch(() => "");
+        console.error("Respuesta no JSON del servidor:", raw);
+        setUsuarios([]);
+        return;
+      }
+
+      const payload = await res.json();
+
+      if (payload && payload.ok === true && Array.isArray(payload.data)) {
+        setUsuarios(payload.data as UsuarioAdmin[]);
       } else {
-        console.error("Respuesta inesperada del servidor:", data);
+        console.error("Respuesta inesperada del servidor:", payload);
         setUsuarios([]); // prevenir error
       }
     } catch (error) {

@@ -20,26 +20,26 @@ export class EventosController {
   // GET /eventos/activos - Obtener todos los eventos activos
   @Get('activos')
   findActivos() {
-    return this.eventosService.findActivos();
+    return this.eventosService.findActivos().then((data) => ({ ok: true, data }));
   }
 
   // GET /eventos/inactivos - Obtener eventos inactivos/pasados
   @Get('inactivos')
   findInactivos() {
-    return this.eventosService.findInactivos();
+    return this.eventosService.findInactivos().then((data) => ({ ok: true, data }));
   }
 
   // GET /eventos/:id - Obtener un evento específico
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.eventosService.findOne(id);
+    return this.eventosService.findOne(id).then((data) => ({ ok: true, data }));
   }
 
   // POST /eventos - Crear un nuevo evento
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() data: Partial<Evento>) {
-    return this.eventosService.create(data);
+    return this.eventosService.create(data).then((created) => ({ ok: true, data: created }));
   }
 
   // PUT /eventos/:id - Actualizar un evento existente
@@ -48,7 +48,7 @@ export class EventosController {
     @Param('id', ParseIntPipe) id: number,
     @Body() data: Partial<Evento>,
   ) {
-    return this.eventosService.update(id, data);
+    return this.eventosService.update(id, data).then((updated) => ({ ok: true, data: updated }));
   }
 
   // DELETE /eventos/:id - Eliminar un evento

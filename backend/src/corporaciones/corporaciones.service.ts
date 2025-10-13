@@ -109,5 +109,17 @@ export class CorporacionesService {
     return { ok: true, message: `Corporación ${id} desactivada correctamente` };
   }
 
-  
+  // Alternar estatus ACTIVO/INACTIVO
+  async toggle(id: number) {
+    const corporacion = await this.corporacionRepo.findOne({
+      where: { id_corporacion: id },
+    });
+    if (!corporacion) {
+      throw new NotFoundException(`Corporaci3n con ID ${id} no encontrada`);
+    }
+    const nuevo = corporacion.estatus === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+    await this.corporacionRepo.update({ id_corporacion: id }, { estatus: nuevo });
+    return this.findOne(id);
+  }
+
 }

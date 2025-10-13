@@ -57,7 +57,8 @@ function EventosActivos() {
       const res = await fetch("http://localhost:3001/eventos/activos", {
         credentials: "include",
       });
-      const data = await res.json();
+      const payload = await res.json();
+      const data = payload?.ok ? (payload.data as Evento[]) : [];
       setEventos(data);
       setEventosFiltrados(data);
     } catch (error) {
@@ -176,7 +177,8 @@ function EventosActivos() {
       });
       
       if (res.ok) {
-        const actualizado: Evento = await res.json();
+        const payload = await res.json();
+        const actualizado: Evento = payload?.ok ? (payload.data as Evento) : editando!;
         alert("Evento actualizado exitosamente");
 
         setEditando(null);

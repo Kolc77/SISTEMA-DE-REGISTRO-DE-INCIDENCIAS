@@ -22,8 +22,8 @@ export default function MotivosTab() {
     try {
       setLoading(true);
       const res = await fetch(API_URL);
-      const data = await res.json();
-      if (Array.isArray(data)) setMotivos(data);
+      const payload = await res.json();
+      if (payload?.ok && Array.isArray(payload.data)) setMotivos(payload.data as Motivo[]);
       else setMotivos([]);
     } catch (error) {
       console.error("Error cargando motivos:", error);
