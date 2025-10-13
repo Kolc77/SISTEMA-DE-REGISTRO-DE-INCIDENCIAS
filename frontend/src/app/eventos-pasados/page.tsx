@@ -185,55 +185,71 @@ function EventosPasados() {
         </div>
         <button
           onClick={logout}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          className="hidden"
         >
           Cerrar Sesión
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Buscar por ID"
-          value={filtroId}
-          onChange={(e) => setFiltroId(e.target.value)}
-          className="p-2 border border-gray-300 rounded-md text-gray-800"
-        />
-        <input
-          type="text"
-          placeholder="Filtrar por nombre"
-          value={filtroEvento}
-          onChange={(e) => setFiltroEvento(e.target.value)}
-          className="p-2 border border-gray-300 rounded-md text-gray-800"
-        />
-        <input
-          type="date"
-          value={filtroFechaInicio}
-          onChange={(e) => setFiltroFechaInicio(e.target.value)}
-          className="p-2 border border-gray-300 rounded-md text-gray-800"
-        />
-        <input
-          type="date"
-          value={filtroFechaFin}
-          onChange={(e) => setFiltroFechaFin(e.target.value)}
-          className="p-2 border border-gray-300 rounded-md text-gray-800"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 items-end">
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-700 mb-1">ID de evento</label>
+          <input
+            type="text"
+            placeholder="Buscar por ID"
+            aria-label="Buscar por ID de evento"
+            value={filtroId}
+            onChange={(e) => setFiltroId(e.target.value)}
+            className="h-10 px-3 text-sm border border-gray-300 rounded-md text-gray-800"
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-700 mb-1">Nombre del evento</label>
+          <input
+            type="text"
+            placeholder="Filtrar por nombre"
+            aria-label="Filtrar por nombre de evento"
+            value={filtroEvento}
+            onChange={(e) => setFiltroEvento(e.target.value)}
+            className="h-10 px-3 text-sm border border-gray-300 rounded-md text-gray-800"
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-700 mb-1">Fecha inicio (Desde)</label>
+          <input
+            type="date"
+            aria-label="Fecha de inicio del rango"
+            value={filtroFechaInicio}
+            onChange={(e) => setFiltroFechaInicio(e.target.value)}
+            className="h-10 px-3 text-sm border border-gray-300 rounded-md text-gray-800"
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-700 mb-1">Fecha fin (Hasta)</label>
+          <input
+            type="date"
+            aria-label="Fecha de fin del rango"
+            value={filtroFechaFin}
+            onChange={(e) => setFiltroFechaFin(e.target.value)}
+            className="h-10 px-3 text-sm border border-gray-300 rounded-md text-gray-800"
+          />
+        </div>
+        <div className="flex justify-end gap-3 md:self-end">
+          <button
+            onClick={aplicarFiltros}
+            className="h-10 px-4 text-sm rounded-md bg-[#1D3557] text-white hover:bg-[#2d4a6f] transition-colors"
+          >
+            Aplicar filtros
+          </button>
+          <button
+            onClick={limpiarFiltros}
+            className="h-10 px-4 text-sm rounded-md bg-gray-200 text-gray-900 hover:bg-gray-300 transition-colors"
+          >
+            Limpiar
+          </button>
+        </div>
       </div>
 
-      <div className="flex justify-end gap-3 mb-6">
-        <button
-          onClick={aplicarFiltros}
-          className="px-4 py-2 rounded-md bg-[#1D3557] text-white hover:bg-[#2d4a6f] transition-colors"
-        >
-          Aplicar filtros
-        </button>
-        <button
-          onClick={limpiarFiltros}
-          className="px-4 py-2 rounded-md bg-gray-200 text-gray-900 hover:bg-gray-300 transition-colors"
-        >
-          Limpiar
-        </button>
-      </div>
 
   <div className="bg-white shadow-lg rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">

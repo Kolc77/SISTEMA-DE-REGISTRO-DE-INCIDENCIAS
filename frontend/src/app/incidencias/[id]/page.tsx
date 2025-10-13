@@ -428,7 +428,7 @@ function GestionIncidenciasContent() {
         </div>
         <button
           onClick={logout}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          className="hidden"
         >
           Cerrar Sesión
         </button>
@@ -453,7 +453,7 @@ function GestionIncidenciasContent() {
               setFiltroId("");
             }
           }}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-64 text-gray-800"
+          className="h-10 px-3 text-sm border border-gray-300 rounded-md shadow-sm w-64 text-gray-800"
         />
 
         <input
@@ -461,7 +461,7 @@ function GestionIncidenciasContent() {
           placeholder="Filtrar por fecha"
           value={filtroFecha}
           onChange={(e) => setFiltroFecha(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-52 text-gray-800"
+          className="h-10 px-3 text-sm border border-gray-300 rounded-md shadow-sm w-52 text-gray-800"
         />
 
         <input
@@ -469,13 +469,13 @@ function GestionIncidenciasContent() {
           placeholder="Filtrar por hora"
           value={filtroHora}
           onChange={(e) => setFiltroHora(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-44 text-gray-800"
+          className="h-10 px-3 text-sm border border-gray-300 rounded-md shadow-sm w-44 text-gray-800"
         />
 
         <select
           value={filtroCorporacion}
           onChange={(e) => setFiltroCorporacion(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-64 text-gray-800 bg-white"
+          className="h-10 px-3 text-sm border border-gray-300 rounded-md shadow-sm w-64 text-gray-800 bg-white"
         >
           <option value="">Todas las corporaciones</option>
           {corporaciones.map((corp) => (
@@ -488,7 +488,7 @@ function GestionIncidenciasContent() {
         <select
           value={filtroMotivo}
           onChange={(e) => setFiltroMotivo(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm w-64 text-gray-800 bg-white"
+          className="h-10 px-3 text-sm border border-gray-300 rounded-md shadow-sm w-64 text-gray-800 bg-white"
         >
           <option value="">Todos los motivos</option>
           {motivos.map((motivo) => (
@@ -500,21 +500,21 @@ function GestionIncidenciasContent() {
 
         <button
           onClick={aplicarFiltros}
-          className="flex items-center gap-2 px-5 py-2 rounded-md bg-[#1D3557] text-white shadow hover:bg-[#2d4a6f] transition-colors"
+          className="flex items-center gap-2 h-10 px-4 text-sm rounded-md bg-[#1D3557] text-white shadow hover:bg-[#2d4a6f] transition-colors"
         >
           ⚡ Aplicar filtros
         </button>
 
         <button
           onClick={limpiarFiltros}
-          className="flex items-center gap-2 px-5 py-2 rounded-md bg-gray-500 text-white shadow hover:bg-gray-600 transition-colors"
+          className="flex items-center gap-2 h-10 px-4 text-sm rounded-md bg-gray-500 text-white shadow hover:bg-gray-600 transition-colors"
         >
           Limpiar
         </button>
 
         <button
           onClick={() => router.push(`/incidencias/${idEvento}/estadisticas`)}
-          className="flex items-center gap-2 px-5 py-2 rounded-md bg-[#457B9D] text-white shadow hover:bg-[#2f5a72] transition-colors"
+          className="flex items-center gap-2 h-10 px-4 text-sm rounded-md bg-[#457B9D] text-white shadow hover:bg-[#2f5a72] transition-colors"
         >
           <FaChartBar />
           Ver estadísticas

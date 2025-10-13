@@ -1,14 +1,6 @@
-"use client";
-
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 
 export default function RootPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace("/login");
-  }, [router]);
-
-  return null;
+  // Redirección del lado del servidor para evitar parpadeos del layout/navbar
+  redirect("/login");
 }
