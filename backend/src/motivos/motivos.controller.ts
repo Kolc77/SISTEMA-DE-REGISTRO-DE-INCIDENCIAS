@@ -58,7 +58,7 @@ export class MotivosController {
     return this.motivosService.toggle(id).then((updated) => ({ ok: true, data: updated }));
   }
 
-  // DELETE /motivos/:id - Eliminar motivo (soft delete)
+  // DELETE /motivos/:id - Eliminar motivo de forma definitiva
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   remove(@Param('id', ParseIntPipe) id: number) {

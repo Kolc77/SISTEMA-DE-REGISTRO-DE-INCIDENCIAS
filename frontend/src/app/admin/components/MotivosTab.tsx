@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FaPen, FaTrash, FaPlus, FaRedo } from "react-icons/fa";
+import { FaPen, FaTrash, FaPlus } from "react-icons/fa";
 
 interface Motivo {
   id_motivo: number;
@@ -66,15 +66,31 @@ export default function MotivosTab() {
     setModalOpen(true);
   };
 
-  const handleToggle = async (id: number) => {
-    await fetch(`${API_URL}/${id}/toggle`, { method: "PATCH" });
-    fetchMotivos();
-  };
-
   const handleDelete = async (id: number) => {
     if (!confirm("¿Eliminar este motivo?")) return;
-    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-    fetchMotivos();
+    try {
+      const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+
+      if (!res.ok) {
+        const detalle = await res.text();
+        let mensaje = "Error al eliminar motivo";
+        if (detalle) {
+          try {
+            const data = JSON.parse(detalle);
+            mensaje = data?.message || detalle;
+          } catch {
+            mensaje = detalle;
+          }
+        }
+        alert(mensaje);
+        return;
+      }
+
+      fetchMotivos();
+    } catch (error) {
+      console.error("Error eliminando motivo:", error);
+      alert("Error al eliminar motivo");
+    }
   };
 
   return (
@@ -131,10 +147,6 @@ export default function MotivosTab() {
                     <FaPen
                       className="text-blue-600 cursor-pointer hover:text-blue-800"
                       onClick={() => handleEdit(m)}
-                    />
-                    <FaRedo
-                      className="text-orange-600 cursor-pointer hover:text-orange-800"
-                      onClick={() => handleToggle(m.id_motivo)}
                     />
                     <FaTrash
                       className="text-red-600 cursor-pointer hover:text-red-800"

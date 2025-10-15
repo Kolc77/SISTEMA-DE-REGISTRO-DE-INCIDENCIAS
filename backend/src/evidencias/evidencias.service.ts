@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   InternalServerErrorException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,13 +12,31 @@ import { CreateEvidenciaDto } from './dto/evidencias.dto';
 import { Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Incidencia } from '../incidencias/incidencias.entity';
 
 @Injectable()
 export class EvidenciasService {
   constructor(
     @InjectRepository(Evidencia)
     private readonly evidenciaRepo: Repository<Evidencia>,
+    @InjectRepository(Incidencia)
+    private readonly incidenciaRepo: Repository<Incidencia>,
   ) {}
+
+  async validateCapturistaOwnership(incidenciaId: number, userId: number) {
+    const incidencia = await this.incidenciaRepo.findOne({
+      where: { id_incidencia: incidenciaId },
+      select: ['id_incidencia', 'usuario_crea'],
+    });
+
+    if (!incidencia) {
+      throw new NotFoundException(`Incidencia con ID ${incidenciaId} no encontrada`);
+    }
+
+    if (incidencia.usuario_crea !== userId) {
+      throw new ForbiddenException('Solo puedes subir evidencias de incidencias que registraste');
+    }
+  }
 
   // Obtener todas las evidencias de una incidencia
   async findByIncidencia(idIncidencia: number) {

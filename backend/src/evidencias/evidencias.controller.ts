@@ -12,6 +12,8 @@ import {
   UploadedFile,
   Res,
   BadRequestException,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
@@ -19,6 +21,9 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { EvidenciasService } from './evidencias.service';
 import { CreateEvidenciaDto } from './dto/evidencias.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('evidencias')
 export class EvidenciasController {
@@ -47,6 +52,8 @@ export class EvidenciasController {
 
   // POST /evidencias/upload - Subir archivo de evidencia
   @Post('upload')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'CAPTURISTA')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(
     FileInterceptor('file', {
@@ -73,9 +80,10 @@ export class EvidenciasController {
       },
     }),
   )
-  upload(
+  async upload(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: { id_incidencia: string; usuario_subio: string },
+    @Req() req: any,
   ) {
     if (!file) {
       throw new BadRequestException('No se ha proporcionado ningún archivo');
@@ -86,9 +94,20 @@ export class EvidenciasController {
       ? (ext === 'JPEG' ? 'JPG' : ext) 
       : 'JPG';
 
+    const incidenciaId = parseInt(body.id_incidencia, 10);
+    if (Number.isNaN(incidenciaId)) {
+      throw new BadRequestException('id_incidencia inválido');
+    }
+
+    const { userId, role } = req.user;
+
+    if (role === 'CAPTURISTA') {
+      await this.evidenciasService.validateCapturistaOwnership(incidenciaId, userId);
+    }
+
     return this.evidenciasService.create({
-      id_incidencia: parseInt(body.id_incidencia),
-      usuario_subio: parseInt(body.usuario_subio),
+      id_incidencia: incidenciaId,
+      usuario_subio: userId,
       ruta_archivo: file.path,
       tipo_archivo: tipoValido as 'JPG' | 'PNG' | 'PDF',
     });

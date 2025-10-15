@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FaPen, FaTrash, FaPlus, FaRedo } from "react-icons/fa";
+import { FaPen, FaTrash, FaPlus } from "react-icons/fa";
 
 interface Corporacion {
   id_corporacion: number;
@@ -66,15 +66,31 @@ export default function CorporacionesTab() {
     setModalOpen(true);
   };
 
-  const handleToggle = async (id: number) => {
-    await fetch(`${API_URL}/${id}/toggle`, { method: "PATCH" });
-    fetchCorporaciones();
-  };
-
   const handleDelete = async (id: number) => {
     if (!confirm("¿Eliminar esta corporación?")) return;
-    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-    fetchCorporaciones();
+    try {
+      const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+
+      if (!res.ok) {
+        const detalle = await res.text();
+        let mensaje = "Error al eliminar corporación";
+        if (detalle) {
+          try {
+            const data = JSON.parse(detalle);
+            mensaje = data?.message || detalle;
+          } catch {
+            mensaje = detalle;
+          }
+        }
+        alert(mensaje);
+        return;
+      }
+
+      fetchCorporaciones();
+    } catch (error) {
+      console.error("Error eliminando corporación:", error);
+      alert("Error al eliminar corporación");
+    }
   };
 
   return (
@@ -128,10 +144,6 @@ export default function CorporacionesTab() {
                     <FaPen
                       className="text-blue-600 cursor-pointer hover:text-blue-800"
                       onClick={() => handleEdit(c)}
-                    />
-                    <FaRedo
-                      className="text-orange-600 cursor-pointer hover:text-orange-800"
-                      onClick={() => handleToggle(c.id_corporacion)}
                     />
                     <FaTrash
                       className="text-red-600 cursor-pointer hover:text-red-800"

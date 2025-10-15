@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Motivo } from './motivos.entity';
 
 @Injectable()
@@ -100,12 +104,24 @@ export class MotivosService {
       throw new NotFoundException(`Motivo con ID ${id} no encontrado`);
     }
 
-    await this.motivoRepo.update(
-      { id_motivo: id },
-      { estatus: 'INACTIVO' },
-    );
+    try {
+      const result = await this.motivoRepo.delete({ id_motivo: id });
+      if (!result.affected) {
+        throw new NotFoundException(`Motivo con ID ${id} no encontrado`);
+      }
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        error.driverError?.code === '23503'
+      ) {
+        throw new ConflictException(
+          'No es posible eliminar el motivo porque está relacionado con incidencias registradas.',
+        );
+      }
+      throw error;
+    }
 
-    return { ok: true, message: `Motivo ${id} desactivado correctamente` };
+    return { ok: true, message: `Motivo ${id} eliminado correctamente` };
   }
 
   // Alternar estatus ACTIVO/INACTIVO

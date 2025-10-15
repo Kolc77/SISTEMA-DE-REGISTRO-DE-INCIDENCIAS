@@ -74,7 +74,7 @@ function GestionIncidenciasContent() {
   const [filtroMotivo, setFiltroMotivo] = useState("");
   const [filtroCorporacion, setFiltroCorporacion] = useState("");
 
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, isCapturista, logout } = useAuth();
 
   const [archivosEvidencia, setArchivosEvidencia] = useState<File[]>([]);
   const [incidenciaParaEvidencia, setIncidenciaParaEvidencia] = useState<number | null>(null);
@@ -256,8 +256,17 @@ function GestionIncidenciasContent() {
         });
 
         if (!respuesta.ok) {
-          const detalle = await respuesta.text();
-          throw new Error(detalle || "Error al registrar evidencia");
+          const detalleBruto = await respuesta.text();
+          let mensajeError = "Error al registrar evidencia";
+          if (detalleBruto) {
+            try {
+              const detalleJson = JSON.parse(detalleBruto);
+              mensajeError = detalleJson?.message || detalleBruto;
+            } catch {
+              mensajeError = detalleBruto;
+            }
+          }
+          throw new Error(mensajeError);
         }
 
         return respuesta.json();
@@ -299,6 +308,22 @@ function GestionIncidenciasContent() {
 
     const usuarioId = user.userId;
 
+    const incidenciaSeleccionada = incidencias.find(
+      (i) => i.id_incidencia === incidenciaParaEvidencia,
+    );
+
+    if (!incidenciaSeleccionada) {
+      alert("No fue posible identificar la incidencia seleccionada");
+      return;
+    }
+
+    if (isCapturista && incidenciaSeleccionada.usuario_crea !== usuarioId) {
+      alert("Solo puedes subir evidencias de incidencias que registraste");
+      setIncidenciaParaEvidencia(null);
+      setArchivosEvidencia([]);
+      return;
+    }
+
     setSubiendoEvidencia(true);
 
     try {
@@ -315,8 +340,17 @@ function GestionIncidenciasContent() {
         });
 
         if (!respuesta.ok) {
-          const detalle = await respuesta.text();
-          throw new Error(detalle || "Error al registrar evidencia");
+          const detalleBruto = await respuesta.text();
+          let mensajeError = "Error al registrar evidencia";
+          if (detalleBruto) {
+            try {
+              const detalleJson = JSON.parse(detalleBruto);
+              mensajeError = detalleJson?.message || detalleBruto;
+            } catch {
+              mensajeError = detalleBruto;
+            }
+          }
+          throw new Error(mensajeError);
         }
 
         return respuesta.json();
@@ -329,7 +363,11 @@ function GestionIncidenciasContent() {
       fetchIncidencias();
     } catch (error) {
       console.error("Error subiendo evidencias:", error);
-      alert("Error al subir evidencias");
+      const mensaje =
+        error instanceof Error && error.message
+          ? error.message
+          : "Error al subir evidencias";
+      alert(mensaje);
     } finally {
       setSubiendoEvidencia(false);
     }
@@ -584,16 +622,22 @@ function GestionIncidenciasContent() {
                       <span className={`font-semibold ${(incidencia.evidencias?.length || 0) === 0 ? 'text-red-600' : 'text-green-600'}`}>
                         {incidencia.evidencias?.length || 0}
                       </span>
-                      <button
-                        onClick={() => {
-                          setIncidenciaParaEvidencia(incidencia.id_incidencia);
-                          setArchivosEvidencia([]);
-                        }}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Subir evidencia"
-                      >
-                        <FaUpload />
-                      </button>
+                      {(isAdmin || incidencia.usuario_crea === user?.userId) && (
+                        <button
+                          onClick={() => {
+                            if (isCapturista && incidencia.usuario_crea !== user?.userId) {
+                              alert('Solo puedes subir evidencias de incidencias que registraste');
+                              return;
+                            }
+                            setIncidenciaParaEvidencia(incidencia.id_incidencia);
+                            setArchivosEvidencia([]);
+                          }}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Subir evidencia"
+                        >
+                          <FaUpload />
+                        </button>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">

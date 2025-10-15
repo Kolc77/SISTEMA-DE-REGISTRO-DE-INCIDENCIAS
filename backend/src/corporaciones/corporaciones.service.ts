@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Corporacion } from './corporaciones.entity';
 
 @Injectable()
@@ -25,33 +29,33 @@ export class CorporacionesService {
     });
   }
 
-  // Obtener una corporación específica
+  // Obtener una corporacion especifica
   async findOne(id: number) {
     const corporacion = await this.corporacionRepo.findOne({
       where: { id_corporacion: id },
     });
 
     if (!corporacion) {
-      throw new NotFoundException(`Corporación con ID ${id} no encontrada`);
+      throw new NotFoundException(`Corporacion con ID ${id} no encontrada`);
     }
 
     return corporacion;
   }
 
-  // Crear nueva corporación
+  // Crear nueva corporacion
   async create(data: Partial<Corporacion>) {
     if (!data.nombre_corporacion) {
-      throw new Error('El nombre de la corporación es obligatorio');
+      throw new Error('El nombre de la corporacion es obligatorio');
     }
 
-    // Verificar si ya existe una corporación con ese nombre
+    // Verificar si ya existe una corporacion con ese nombre
     const existe = await this.corporacionRepo.findOne({
       where: { nombre_corporacion: data.nombre_corporacion },
     });
 
     if (existe) {
       throw new ConflictException(
-        `Ya existe una corporación con el nombre "${data.nombre_corporacion}"`,
+        `Ya existe una corporacion con el nombre "${data.nombre_corporacion}"`,
       );
     }
 
@@ -63,25 +67,28 @@ export class CorporacionesService {
     return this.corporacionRepo.save(corporacion);
   }
 
-  // Actualizar corporación
+  // Actualizar corporacion
   async update(id: number, data: Partial<Corporacion>) {
     const corporacionExiste = await this.corporacionRepo.findOne({
       where: { id_corporacion: id },
     });
 
     if (!corporacionExiste) {
-      throw new NotFoundException(`Corporación con ID ${id} no encontrada`);
+      throw new NotFoundException(`Corporacion con ID ${id} no encontrada`);
     }
 
-    // Si se está actualizando el nombre, verificar que no exista otro con ese nombre
-    if (data.nombre_corporacion && data.nombre_corporacion !== corporacionExiste.nombre_corporacion) {
+    // Si se esta actualizando el nombre, verificar que no exista otro con ese nombre
+    if (
+      data.nombre_corporacion &&
+      data.nombre_corporacion !== corporacionExiste.nombre_corporacion
+    ) {
       const nombreExiste = await this.corporacionRepo.findOne({
         where: { nombre_corporacion: data.nombre_corporacion },
       });
 
       if (nombreExiste) {
         throw new ConflictException(
-          `Ya existe una corporación con el nombre "${data.nombre_corporacion}"`,
+          `Ya existe una corporacion con el nombre "${data.nombre_corporacion}"`,
         );
       }
     }
@@ -90,23 +97,34 @@ export class CorporacionesService {
     return this.findOne(id);
   }
 
-  // Eliminar corporación (soft delete - cambiar estatus a INACTIVO)
+  // Eliminar corporacion de forma definitiva
   async remove(id: number) {
     const corporacionExiste = await this.corporacionRepo.findOne({
       where: { id_corporacion: id },
     });
 
     if (!corporacionExiste) {
-      throw new NotFoundException(`Corporación con ID ${id} no encontrada`);
+      throw new NotFoundException(`Corporacion con ID ${id} no encontrada`);
     }
 
-    await this.corporacionRepo.update(
-      { id_corporacion: id },
-      { estatus: 'INACTIVO' },
-    );
+    try {
+      const result = await this.corporacionRepo.delete({ id_corporacion: id });
+      if (!result.affected) {
+        throw new NotFoundException(`Corporacion con ID ${id} no encontrada`);
+      }
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        error.driverError?.code === '23503'
+      ) {
+        throw new ConflictException(
+          'No es posible eliminar la corporacion porque esta relacionada con incidencias registradas.',
+        );
+      }
+      throw error;
+    }
 
-
-    return { ok: true, message: `Corporación ${id} desactivada correctamente` };
+    return { ok: true, message: `Corporacion ${id} eliminada correctamente` };
   }
 
   // Alternar estatus ACTIVO/INACTIVO
@@ -115,11 +133,13 @@ export class CorporacionesService {
       where: { id_corporacion: id },
     });
     if (!corporacion) {
-      throw new NotFoundException(`Corporaci3n con ID ${id} no encontrada`);
+      throw new NotFoundException(`Corporacion con ID ${id} no encontrada`);
     }
     const nuevo = corporacion.estatus === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
-    await this.corporacionRepo.update({ id_corporacion: id }, { estatus: nuevo });
+    await this.corporacionRepo.update(
+      { id_corporacion: id },
+      { estatus: nuevo },
+    );
     return this.findOne(id);
   }
-
 }
