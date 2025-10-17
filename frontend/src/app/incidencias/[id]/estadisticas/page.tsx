@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FaArrowLeft, FaChartBar, FaDownload, FaSync } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaChartBar,
+  FaDownload,
+  FaFilePdf,
+  FaSync,
+} from "react-icons/fa";
 import ProtectedRoute from "../../../components/ProtectedRoute";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -260,6 +266,261 @@ function EstadisticasIncidenciasContent() {
     URL.revokeObjectURL(url);
   };
 
+  const generarReportePDF = async () => {
+    try {
+      const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const fechaGeneracion = new Date();
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(29, 53, 87);
+      doc.text("Reporte de Incidencias", 14, 20);
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(68, 68, 68);
+      doc.text(`Evento: ${nombreEvento || "Sin nombre"}`, 14, 28);
+      doc.text(
+        `Generado: ${fechaGeneracion.toLocaleString("es-MX")}`,
+        14,
+        34
+      );
+      doc.text(`Total de incidencias: ${totalIncidencias}`, 14, 40);
+
+      const filtrosAplicados = [
+        fechaInicio && `Fecha inicio: ${fechaInicio}`,
+        fechaFin && `Fecha fin: ${fechaFin}`,
+        horaInicio && `Hora inicio: ${horaInicio}`,
+        horaFin && `Hora fin: ${horaFin}`,
+        filtroCorporacion &&
+          `Corporación: ${
+            corporaciones.find(
+              (corp) => corp.id_corporacion.toString() === filtroCorporacion
+            )?.nombre_corporacion || filtroCorporacion
+          }`,
+        filtroMotivo &&
+          `Motivo: ${
+            motivos.find(
+              (motivo) => motivo.id_motivo.toString() === filtroMotivo
+            )?.nombre_motivo || filtroMotivo
+          }`,
+      ].filter(Boolean) as string[];
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(29, 53, 87);
+      doc.text("Filtros aplicados", 14, 52);
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(68, 68, 68);
+      let currentY = 58;
+
+      const detalleFiltros = filtrosAplicados.length
+        ? filtrosAplicados
+        : ["Sin filtros aplicados"];
+
+      detalleFiltros.forEach((filtro) => {
+        const lineas = doc.splitTextToSize(`• ${filtro}`, 180);
+        doc.text(lineas, 14, currentY);
+        currentY += lineas.length * 6;
+      });
+
+      currentY += 2;
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(29, 53, 87);
+      doc.text("Resumen ejecutivo", 14, currentY);
+      currentY += 6;
+
+      const resumenGeneral = [
+        `Incidencias registradas: ${totalIncidencias}`,
+        `Corporaciones presentes: ${incidenciasPorCorporacion.length}`,
+        `Motivos registrados: ${incidenciasPorMotivo.length}`,
+      ];
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(68, 68, 68);
+      resumenGeneral.forEach((item) => {
+        doc.text(`• ${item}`, 14, currentY);
+        currentY += 6;
+      });
+
+      const topCorporaciones = incidenciasPorCorporacion.slice(0, 3);
+      if (topCorporaciones.length) {
+        currentY += 2;
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(29, 53, 87);
+        doc.text("Corporaciones con más incidencia", 14, currentY);
+        currentY += 6;
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(68, 68, 68);
+        topCorporaciones.forEach(({ nombre, total }) => {
+          doc.text(`• ${nombre}: ${total}`, 14, currentY);
+          currentY += 6;
+        });
+      }
+
+      const topMotivos = incidenciasPorMotivo.slice(0, 3);
+      if (topMotivos.length) {
+        currentY += 2;
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(29, 53, 87);
+        doc.text("Motivos más recurrentes", 14, currentY);
+        currentY += 6;
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(68, 68, 68);
+        topMotivos.forEach(({ nombre, total }) => {
+          doc.text(`• ${nombre}: ${total}`, 14, currentY);
+          currentY += 6;
+        });
+      }
+
+      const drawHorizontalBarChart = (
+        titulo: string,
+        data: { nombre: string; total: number }[],
+        startY: number
+      ) => {
+        if (!data.length) {
+          return startY;
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(29, 53, 87);
+        doc.text(titulo, 14, startY);
+
+        const labelWidth = 52;
+        const chartWidth = 100;
+        const barHeight = 6;
+        const barSpacing = 10;
+        const marginLeft = 14;
+        const barX = marginLeft + labelWidth + 4;
+
+        let y = startY + 6;
+        const maxTotal = Math.max(...data.map((item) => item.total), 1);
+
+        data.forEach(({ nombre, total }) => {
+          const labelLines = doc.splitTextToSize(nombre, labelWidth);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(68, 68, 68);
+          doc.text(labelLines, marginLeft, y + barHeight - 1);
+          const labelHeight = labelLines.length * 5;
+
+          const barY = y;
+          const barWidth = maxTotal ? (total / maxTotal) * chartWidth : 0;
+
+          doc.setDrawColor(210, 210, 210);
+          doc.rect(barX, barY, chartWidth, barHeight);
+          doc.setFillColor(29, 53, 87);
+          doc.rect(barX, barY, barWidth, barHeight, "F");
+
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(29, 53, 87);
+          doc.text(
+            `${total}`,
+            barX + barWidth + 4,
+            barY + barHeight - 1
+          );
+
+          y = Math.max(barY + barHeight + barSpacing, barY + labelHeight + 2);
+        });
+
+        return y;
+      };
+
+      const chartsStart = Math.max(currentY + 6, 110);
+      let chartY = chartsStart;
+
+      const principalesCorporaciones = incidenciasPorCorporacion.slice(0, 5);
+      if (principalesCorporaciones.length) {
+        chartY = drawHorizontalBarChart(
+          "Distribución por corporación (top 5)",
+          principalesCorporaciones,
+          chartY
+        );
+        chartY += 4;
+      }
+
+      const principalesMotivos = incidenciasPorMotivo.slice(0, 5);
+      if (principalesMotivos.length) {
+        chartY = drawHorizontalBarChart(
+          "Distribución por motivo (top 5)",
+          principalesMotivos,
+          chartY
+        );
+        chartY += 4;
+      }
+
+      const tableStart = Math.max(chartY, 160);
+
+      const tableRows = incidenciasFiltradas.length
+        ? incidenciasFiltradas.map((incidencia) => [
+            `INC-${String(incidencia.id_incidencia).padStart(3, "0")}`,
+            formatearFechaParaTabla(incidencia.fecha),
+            incidencia.hora ? incidencia.hora.substring(0, 5) : "N/A",
+            incidencia.corporacion?.nombre_corporacion || "N/A",
+            incidencia.motivo?.nombre_motivo || "N/A",
+            incidencia.ubicacion || "N/A",
+            incidencia.estatus || "N/A",
+          ])
+        : [
+            [
+              "Sin incidencias con los filtros aplicados",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+            ],
+          ];
+
+      autoTable(doc, {
+        startY: tableStart,
+        head: [
+          [
+            "ID",
+            "Fecha",
+            "Hora",
+            "Corporación",
+            "Motivo",
+            "Ubicación",
+            "Estatus",
+          ],
+        ],
+        body: tableRows,
+        margin: { left: 14, right: 14 },
+        headStyles: {
+          fillColor: [29, 53, 87],
+          textColor: [255, 255, 255],
+          fontSize: 10,
+        },
+        styles: {
+          fontSize: 8,
+          textColor: [60, 60, 60],
+          cellPadding: 2,
+        },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+        columnStyles: {
+          0: { cellWidth: 24 },
+          5: { cellWidth: 48 },
+        },
+      });
+
+      doc.save(`reporte_incidencias_evento_${idEvento}.pdf`);
+    } catch (error) {
+      console.error("Error generando PDF:", error);
+      window.alert("No fue posible generar el PDF. Inténtalo nuevamente.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -390,13 +651,20 @@ function EstadisticasIncidenciasContent() {
             </button>
           </div>
 
-  <div className="flex gap-3">
+          <div className="flex gap-3">
             <button
               onClick={generarReporteCSV}
               className="flex items-center gap-2 px-5 py-2 rounded-md bg-green-600 text-white shadow hover:bg-green-700 transition-colors"
             >
               <FaDownload />
               Descargar reporte (CSV)
+            </button>
+            <button
+              onClick={generarReportePDF}
+              className="flex items-center gap-2 px-5 py-2 rounded-md bg-red-600 text-white shadow hover:bg-red-700 transition-colors"
+            >
+              <FaFilePdf />
+              Exportar reporte (PDF)
             </button>
           </div>
         </div>
