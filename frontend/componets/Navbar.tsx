@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FaUserCircle, FaArrowLeft } from "react-icons/fa";
 import { useAuth } from "../src/app/context/AuthContext";
+import Image from "next/image";
 
 export default function Navbar() {
   const router = useRouter();
@@ -28,10 +29,13 @@ export default function Navbar() {
           className="focus:outline-none"
           title="Ir a inicio"
         >
-          <img
-            src="/logo-durango.png"
+          <Image
+            src="/sspe.png"
             alt="Logo Durango"
-            className="h-10 w-auto"
+            width={160}
+            height={40}
+            priority
+            className="h-10 w-auto brightness-0 invert"
           />
         </button>
       </div>

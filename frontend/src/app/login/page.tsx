@@ -1,9 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
+import Image from "next/image";
 
 type LoginResponse = {
   ok: boolean;
@@ -81,18 +81,24 @@ export default function LoginPage() {
             }}
           >
             <div className="flex flex-col items-center justify-center p-4">
-              <img
-                src="/logo-durango.png"
+              <Image
+                src="/sspe.png"
                 alt="Logo Durango - Gobierno del Estado"
+                width={1000}
+                height={300}
+                priority
                 className="max-w-[350px] h-auto"
               />
             </div>
           </div>
 
           <div className="md:hidden w-full bg-white flex items-center justify-center py-8">
-            <img
-              src="/logo-durango.png"
+            <Image
+              src="/sspe.png"
               alt="Logo Durango - Gobierno del Estado"
+              width={800}
+              height={240}
+              priority
               className="max-w-[250px] h-auto"
             />
           </div>

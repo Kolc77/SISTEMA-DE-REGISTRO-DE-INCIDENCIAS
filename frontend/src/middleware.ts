@@ -5,13 +5,17 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get("access_token")?.value;
 
+  // Treat static assets from `public/` as public
+  const isAsset = /\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|map|txt|woff2?|ttf|eot)$/i.test(
+    pathname
+  );
+
   const isPublic =
     pathname === "/login" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
     pathname === "/favicon.ico" ||
-    pathname.startsWith("/images") ||
-    pathname.startsWith("/public");
+    isAsset;
 
   if (!token && !isPublic) {
     const url = req.nextUrl.clone();
@@ -31,4 +35,3 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
-
